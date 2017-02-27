@@ -1,7 +1,8 @@
 {
         "domain":[10,10],
         "xNodes":10,
-        "yNodes":10
+        "yNodes":10,
+        "viscosity(nu)":0.001
 }
 
 

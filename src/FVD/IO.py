@@ -50,6 +50,7 @@ class IO(object):
         x = 1.0*data["xNodes"]
         y = 1.0*data["yNodes"]
         domainSize = data["domain"]
+        nu = data["viscosity"]
         grid_zeros = np.array(grid_gen(x, y))
         grid_x = np.array(grid_gen((2.0*x-1.0), (2.0*y-1.0)))
         grid_y = np.array(grid_gen((2.0*x-1.0), (2.0*y-1.0)))
@@ -58,7 +59,7 @@ class IO(object):
         delta_x = x_dis/2.0
         delta_y = y_dis/2.0
 
-#Create array with *1.0)x,y co-ordinates from generated grid
+#Create array with x,y co-ordinates from generated grid
         i = np.size(grid_x,0)
         j = np.size(grid_y,1)
 

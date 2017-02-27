@@ -29,8 +29,9 @@ yNodes = IO_obj.y #Number of ynodes
 grid = IO_obj.grid_zeros
 grid_xpos = IO_obj.grid_x #x co-ordinates
 grid_ypos = IO_obj.grid_y #y co-ordinates
-
-print grid_ypos
+aE = aW = IO_obj.delta_y #area of east and west faces
+aN = aS = IO_obj.delta_x #area of north and south faces
+NU = IO_obj.nu #viscosity nu (constant viscosity model)
 #Create array with x,y co-ordinates from generated grid
 
 ###############------------------------------------------################
