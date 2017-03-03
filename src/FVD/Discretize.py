@@ -294,8 +294,8 @@ class Discretize(object):
                     Fn[m][n] = rho*ufn[m][n]
                     aN[m][n] = Dy - max(0.0, -Fn[m][n])
 
-        for a, b, c, d in zip(aW, aE, aN, aS):
-            aP = a + b + c + d
+        for a, b, c, d, e, f, g, h, i in zip(aW, aE, aN, aS, Fe, Fw, Fn, Fs, SPx):
+            aP = a + b + c + d + e - f + g - h - i
         return u, Px, dPx, dPy, Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aP, aW, aE, aN, aS, SUx, SPx, SUy, SPy
 
 
