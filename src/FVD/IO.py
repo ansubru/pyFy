@@ -36,26 +36,66 @@ class IO(object):
     pathf2 =os.path.dirname(os.path.dirname(pathf)) + temp
 
     def grid_gen(a, b):
-        """Function that generates a x*y matrix based on grid I/P"""
+        """Function that generates a x*y matrix (incl boundaries) based on grid I/P"""
         a += 2
         b += 2
-        grid_nodes = np.zeros(shape=(a,b))
-        return grid_nodes
+        grid = np.zeros(shape=(a,b))
+        return grid
 
 #Open pyFy/usr/setup.txt
     dataStorage = {}
     with open(os.path.join(pathf2, "setup.json"),'r') as json_data:
         dataStorage = json.load(json_data)
         data = dataStorage
+#Data extraction
         x = 1.0*data["xNodes"]
         y = 1.0*data["yNodes"]
         domainSize = data["domain"]
-        nu = data["viscosity"]
+        nu = 1.0*data["viscosity"]
+        rho = 1.0*data["rho"]
+        x_dis = (domainSize[0]*1.0)/x #x-grid spacing
+        y_dis = (domainSize[1]*1.0)/y #y-grid spacing
+        U_wall = 0.0 #No slip walls
+        U_bc = data["boundary-velocity"] #Boundary velocity at I/P
+
+#Boundary conditions
+        if data["A-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
+            UA = U_wall
+            FA = rho*UA #mass flux through boundary
+            DA = (nu*rho)/y_dis #Diffusion conductance
+        elif data["A-bound"] in ['fixed velocity']:
+            UA = U_bc
+            FA = rho*UA #mass flux through boundary
+            DA = (nu*rho)/y_dis
+        if data["B-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
+            UB = U_wall
+            FB = rho*UB #mass flux through boundary
+            DB = (nu*rho)/y_dis #Diffusion conductance
+        elif data["B-bound"] in ['fixed velocity']:
+            UB = U_bc
+            FB = rho*U_bc #mass flux through boundary
+            DB = (nu*rho)/y_dis
+        if data["C-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
+            UC = U_wall
+            FC = rho*UC #mass flux through boundary
+            DC = (nu*rho)/y_dis #Diffusion conductance
+        elif data["C-bound"] in ['fixed velocity']:
+            UC = U_bc
+            FC = rho*UC #mass flux through boundary
+            DC = (nu*rho)/y_dis
+        if data["D-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
+            UD = U_wall
+            FD = rho*UD #mass flux through boundary
+            DD = (nu*rho)/y_dis #Diffusion conductance
+        elif data["D-bound"] in ['fixed velocity']:
+            UD = U_bc
+            FD = rho*UD #mass flux through boundary
+            DD = (nu*rho)/y_dis
+
         grid_zeros = np.array(grid_gen(x, y))
         grid_x = np.array(grid_gen((2.0*x-1.0), (2.0*y-1.0)))
         grid_y = np.array(grid_gen((2.0*x-1.0), (2.0*y-1.0)))
-        x_dis = (domainSize[0]*1.0)/x
-        y_dis = (domainSize[1]*1.0)/y
+        grid_nodes = grid_gen(x-2,y-2)
         delta_x = x_dis/2.0
         delta_y = y_dis/2.0
 

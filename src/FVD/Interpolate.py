@@ -26,21 +26,20 @@ class Interpolate(object):
            z_val: Distance between nodal points
     """
 
-    def __init__(self, x, y, z):
+    def __init__(self):
         """Return object"""
-        self.x = x
-        self.y = y
-        self.z = z
 
-    def lin_interp(self):
+
+    def lin_interp(self,x,y):
         """Function performs a linear interpolation"""
-        lininterp = (self.x+self.y)/2
+        lininterp = (x + y)/2
         return lininterp
 
-    def CD_interp(self):
+    def CD_interp(self,x,y,z):
         """Function that performs a Central differencing"""
-        CDinterp = (self.x-self.y)/self.z
+        CDinterp = (x-y)/z
         return CDinterp
 
 ##############################################################################################################################################################################################################
+
 

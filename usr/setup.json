@@ -2,7 +2,16 @@
         "domain":[10,10],
         "xNodes":10,
         "yNodes":10,
-        "viscosity(nu)":0.001
+        "viscosity":0.001,
+        "rho":1.2,
+        "boundary-velocity":1.0,
+        "A-bound":"fixed velocity",
+        "B-bound":"walls",
+        "C-bound":"walls",
+        "D-bound":"walls"
+
+
+
 }
 
 
