@@ -51,45 +51,51 @@ class IO(object):
         x = 1.0*data["xNodes"]
         y = 1.0*data["yNodes"]
         domainSize = data["domain"]
+        Ubc = data["boundary-velocity"] #Boundary velocity at I/P
         nu = 1.0*data["viscosity"]
         rho = 1.0*data["rho"]
         x_dis = (domainSize[0]*1.0)/x #x-grid spacing
         y_dis = (domainSize[1]*1.0)/y #y-grid spacing
-        U_wall = 0.0 #No slip walls
-        U_bc = data["boundary-velocity"] #Boundary velocity at I/P
+        U_wall = 0.0 #No slip wall velocity is (0,0)
+        Ubcx = 1.0*Ubc[0] #Boundary velocity x-comp
+        Ubcy = 1.0*Ubc[1] #Boundary velocity y-comp
 
 #Boundary conditions
         if data["A-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
-            UA = U_wall
+            UA = VA = U_wall
             FA = rho*UA #mass flux through boundary
-            DA = (nu*rho)/y_dis #Diffusion conductance
+            DA = (nu*rho)/x_dis #Diffusion conductance
         elif data["A-bound"] in ['fixed velocity']:
-            UA = U_bc
+            UA = Ubcx
+            VA = Ubcy
             FA = rho*UA #mass flux through boundary
-            DA = (nu*rho)/y_dis
+            DA = (nu*rho)/x_dis
         if data["B-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
-            UB = U_wall
+            UB = VB = U_wall
             FB = rho*UB #mass flux through boundary
             DB = (nu*rho)/y_dis #Diffusion conductance
         elif data["B-bound"] in ['fixed velocity']:
-            UB = U_bc
-            FB = rho*U_bc #mass flux through boundary
+            UB = Ubcx
+            VB = Ubcy
+            FB = rho*VB #mass flux through boundary
             DB = (nu*rho)/y_dis
         if data["C-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
-            UC = U_wall
+            UC = VC =  U_wall
             FC = rho*UC #mass flux through boundary
-            DC = (nu*rho)/y_dis #Diffusion conductance
+            DC = (nu*rho)/x_dis #Diffusion conductance
         elif data["C-bound"] in ['fixed velocity']:
-            UC = U_bc
+            UC = Ubcx
+            VC = Ubcy
             FC = rho*UC #mass flux through boundary
-            DC = (nu*rho)/y_dis
+            DC = (nu*rho)/x_dis
         if data["D-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
-            UD = U_wall
-            FD = rho*UD #mass flux through boundary
+            UD = VD =  U_wall
+            FD = rho*VD #mass flux through boundary
             DD = (nu*rho)/y_dis #Diffusion conductance
         elif data["D-bound"] in ['fixed velocity']:
-            UD = U_bc
-            FD = rho*UD #mass flux through boundary
+            UD = Ubcx
+            VD = Ubcy
+            FD = rho*VD #mass flux through boundary
             DD = (nu*rho)/y_dis
 
         grid_zeros = np.array(grid_gen(x, y))
