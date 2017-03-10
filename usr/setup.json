@@ -1,12 +1,12 @@
 {
-        "domain":[10,10],
-        "xNodes":10,
-        "yNodes":10,
+        "domain":[3,3],
+        "xNodes":3,
+        "yNodes":3,
         "viscosity":0.001,
         "rho":1.2,
-        "boundary-velocity":1.0,
-        "A-bound":"fixed velocity",
-        "B-bound":"walls",
+        "boundary-velocity":[1.0,1.0],
+        "A-bound":"walls",
+        "B-bound":"fixed velocity",
         "C-bound":"walls",
         "D-bound":"walls"
 
