@@ -76,23 +76,21 @@ class Discretize(object):
                                              1.0*mat,  1.0*mat,  1.0*mat,  1.0*mat, 1.0*mat,
         i = np.size(mat,0)
         j = np.size(mat,1)
-        print (i-1),(j-1)
+        print i,j
 #Diffusion conductance for an equidistant grid
         NU = IO_obj.nu #viscosity nu (constant viscosity model)
         rho = IO_obj.rho #Density in Kg/m3
         mu = NU*rho #constant for all nodes
         dx = IO_obj.x_dis # x-grid spacing
-        dy = IO_obj.y_dis # y-grid spacing
 
         Dx = (NU*rho)/IO.x_dis
         Dy = (NU*rho)/IO.y_dis
         coeff = 0.5 #Co-efficient for equidistant grid
 
-        for m in range(i): #loop through rows
-            for n in range(j): #loop through columns
+        for n in range(i): #loop through rows
+            for m in range(j): #loop through columns
                 if(m==n==0): #cells in the top left edge
 #source term
-                    print m,n
                     dPx[m][n] = (Interp_obj.CD_interp(Px[m][n], Px[m+1][n], dx))
                     dPy[m][n] = (Interp_obj.CD_interp(Px[m][n+1], Px[m][n], dy))
                     SUx[m][n] = ((2.0*DA + FA)*UA) + ((2.0*DB + FB)*UB) + dPx[m][n]
@@ -118,9 +116,9 @@ class Discretize(object):
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
                                - SPx[m][n])
-                elif(m == 0 and n <= (j-1)): #First row bordering the BC --> B (sans edges)
+                elif(n == 0 and m != (j-1)): #First row bordering the BC --> B (sans edges)
 #source terms
-                    print m,n
+                    print m
                     dPx[m][n] = (Interp_obj.CD_interp(Px[m-1][n], Px[m+1][n], dx))*coeff
                     dPy[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n+1], Px[m][n], dy))
                     SUx[m][n] = ((2.0*DB + FB)*UB) + dPx[m][n]
@@ -146,34 +144,34 @@ class Discretize(object):
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
                                 - SPx[m][n])
-                elif(m == 0 and n == (j-1)): #top right edge
+                #elif(m == 0 and n == (j-1)): #top right edge
 #source terms
-                    print m,n
-                    dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m-1][n], Px[m][n], dx))
-                    dPy[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n+1], Px[m][n], dy))
-                    SUx[m][n] = ((2.0*DC + FC)*UC) + ((2.0*DB + FB)*UB) + dPx[m][n]
-                    SUy[m][n] = ((2.0*DC + FC)*VC) + ((2.0*DB + FB)*VB) + dPy[m][n]
-                    SPx[m][n] = SPy[m][n] = -((2.0*DC + FC) + (2.0*DB + FB))
+                    #print m,n
+                    #dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m-1][n], Px[m][n], dx))
+                    #dPy[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n+1], Px[m][n], dy))
+                    #SUx[m][n] = ((2.0*DC + FC)*UC) + ((2.0*DB + FB)*UB) + dPx[m][n]
+                    #SUy[m][n] = ((2.0*DC + FC)*VC) + ((2.0*DB + FB)*VB) + dPy[m][n]
+                    #SPx[m][n] = SPy[m][n] = -((2.0*DC + FC) + (2.0*DB + FB))
 #West faces
-                    ufw[m][n] = Interp_obj.lin_interp(u[m-1][n], u[m],[n])
-                    Fw[m][n] = rho*ufw[m][n]
-                    aW[m][n] = Dx + max(0.0, Fw[m][n])
+                    #ufw[m][n] = Interp_obj.lin_interp(u[m-1][n], u[m],[n])
+                    #Fw[m][n] = rho*ufw[m][n]
+                    #aW[m][n] = Dx + max(0.0, Fw[m][n])
 #East faces
-                    ufe[m][n] = UC
-                    Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = 0.0
+                    #ufe[m][n] = UC
+                    #Fe[m][n] = rho*ufe[m][n]
+                    #aE[m][n] = 0.0
 #South faces
-                    ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
-                    Fs[m][n] = rho*ufs[m][n]
-                    aS[m][n] = Dy + max(0.0, Fs[m][n])
+                    #ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
+                    #Fs[m][n] = rho*ufs[m][n]
+                    #aS[m][n] = Dy + max(0.0, Fs[m][n])
 #North faces
-                    ufn[m][n] = UB
-                    Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = 0.0
+                    #ufn[m][n] = UB
+                    #Fn[m][n] = rho*ufn[m][n]
+                    #aN[m][n] = 0.0
 #aP term
-                    aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
-                                + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
-                                - SPx[m][n])
+                    #aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
+                                #+ Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
+                                #- SPx[m][n])
                 #elif(n < (i-1) and m == 0): #First coulumn bordering the BC --> A (sans edges)
 #source terms
                     #print m,n
