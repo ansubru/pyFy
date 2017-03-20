@@ -54,6 +54,7 @@ class IO(object):
         Ubc = data["boundary-velocity"] #Boundary velocity at I/P
         nu = 1.0*data["viscosity"]
         rho = 1.0*data["rho"]
+        alpha = 1.0*data["Under-relaxation"]
         x_dis = (domainSize[0]*1.0)/x #x-grid spacing
         y_dis = (domainSize[1]*1.0)/y #y-grid spacing
         U_wall = 0.0 #No slip wall velocity is (0,0)

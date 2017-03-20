@@ -42,44 +42,37 @@ VD = IO_obj.VD
 U = 0.0*grid
 V = 0.0*grid
 P = 0.0*grid
-i = np.size(U,0) #get indices for rows
-j = np.size(U,1) #get indices for columns
 
 from Discretize import Discretize
 disc_obj = Discretize()
 
+from gaussSiedel import gaussSiedel
+gs_obj = gaussSiedel()
 # Discretize U velocity using FOU
-Px, dPx, dPy, Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aP, aW, aE, aN, aS, SUx, SPx, SUy, SPy = disc_obj.FOU_disc(U, UA, UB, UC, UD)
+Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
+#Check if matrix A is diagonally dominant
+i = np.size(A,0) #get indices for rows
+j = np.size(A,1) #get indices for columns
+sum = np.array([])
+for m in range(i):
+    for n in range(j):
+        if m != n:
+            sum[i] = A[]
 
-#Generate A, b and x matrices for Gauss Seidel method
-AU = []
-amat = [0 for y in range(i)]
-for x in range(i):
-    for m in range(i): #loop through rows
-        for n in range(j): #loop through columns
-            print m,n
-            amat[m] = [ aP[m][n], (-aW[m][n]), (-aE[m][n]), (-aN[m][n]), (-aS[m][n]) ]
-    AU.append(amat[m])
-    print AU
+#Ugs = gs_obj.gauss_seidel(AU, x0=None, eps=1e-5, max_iteration=100)
 
-AU = np.asarray(AU)
-print (np.size(AU,0))
+
 
 # Discretize V velocity using FOU
-Px, dPx, dPy, Fe, Fw, Fn, Fs, vfe, vfw, vfn, vfs, aP, aW, aE, aN, aS, SVx, SPx, SVy, SPy = disc_obj.FOU_disc(V, VA, VB, VC, VD)
+#Px, dPx, dPy, Fe, Fw, Fn, Fs, vfe, vfw, vfn, vfs, aP, aW, aE, aN, aS, SVx, SPx, SVy, SPy = disc_obj.FOU_disc(V, VA, VB, VC, VD)
+pp = pprint.PrettyPrinter(indent=1)
+print 'A:'
+pp.pprint(A)
+print 'B:'
+pp.pprint(Bx)
 
 
 
-'''___MAIN___'''
-
-A = np.array([[4.0, -2.0, 1.0], [1.0, -3.0, 2.0], [-1.0, 2.0, 6.0]])
-b = [1.0, 2.0, 3.0]
-x = [1, 1, 1]
-
-n = 20
-
-#print gauss(A, b, x, n)
-#print solve(A, b)
 
 
 
