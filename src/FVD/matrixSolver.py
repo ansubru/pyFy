@@ -19,6 +19,32 @@ import IO
 import Interpolate
 import pprint
 
+########################################################################FUNCTION DEF######################################################################################################################
+def DDChk(i,j,A):
+    sum = np.zeros((i, 1), dtype=float)
+    flag = []
+    for m in range(i):
+        for n in range(j):
+            if m != n:
+                sum[m] = sum[m] + abs(A[m][n])
+
+    for m in range(i):
+        for n in range(j):
+            if m == n:
+                if A[m][n] > sum[m]:
+                    flag.append("DD")
+                else:
+                    flag.append("NXD")
+
+    for m in range(flag.__len__()):
+        if flag[m] in "NXD":
+            print ("Critical error! Matrix is not diagonally dominant at row ",m)
+            state = "fail"
+        else:
+            state = "pass"
+    print state
+    return state
+
 #############################################################################################################################################################################################################
 ###----------------------------------------------------------------------------CLASS DEFINITION-----------------------------------------------------------------------------------------------###
 ###############------------CREATE IO OBJECT--------------################
@@ -50,26 +76,23 @@ from gaussSiedel import gaussSiedel
 gs_obj = gaussSiedel()
 # Discretize U velocity using FOU
 Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
+print Bx
+## A matrix checks!
+
 #Check if matrix A is diagonally dominant
 i = np.size(A,0) #get indices for rows
 j = np.size(A,1) #get indices for columns
-sum = np.array([])
-for m in range(i):
-    for n in range(j):
-        if m != n:
-            sum[i] = A[]
+testA = np.ones(shape=(i, j))
+testVal = DDChk(i, j, A)
 
-#Ugs = gs_obj.gauss_seidel(AU, x0=None, eps=1e-5, max_iteration=100)
+if testVal in "pass":
+    reltol = 0.001
+    toltype = "r"
+    solve = gs_obj.gauss_seidel(np.array(A), np.array(Bx), toltype, reltol)
+np.array(solve)
+newU = solve.reshape(np.size(grid,0),np.size(grid,1))
+print newU
 
-
-
-# Discretize V velocity using FOU
-#Px, dPx, dPy, Fe, Fw, Fn, Fs, vfe, vfw, vfn, vfs, aP, aW, aE, aN, aS, SVx, SPx, SVy, SPy = disc_obj.FOU_disc(V, VA, VB, VC, VD)
-pp = pprint.PrettyPrinter(indent=1)
-print 'A:'
-pp.pprint(A)
-print 'B:'
-pp.pprint(Bx)
 
 
 

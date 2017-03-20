@@ -7,7 +7,7 @@ __license__ = "GPL"
 __version__ = "1.0"
 __maintainer__ = "Ananda S. Kannan"
 __email__ = "ansubru@gmail.com"
-__credits to__ Worasait Suwannik http://bit.ly/wannik
+__credits to__ https://github.com/stangmechanic/NE155_Homework_3/blob/master/GaussSeidel.py
 
 """
 ################################################################################MODULE FOR GAUSS SEIDEL METHOD################################################################################################
@@ -28,37 +28,76 @@ class gaussSiedel(object):
     def __init__(self):
         """Return object"""
 
-    def gauss_seidel(m, x0=None, eps=1e-5, max_iteration=100):
-        """
-          Parameters
-          ----------
-          m  : list of list of floats : coefficient matrix
-          x0 : list of floats : initial guess
-          eps: float : error tolerance
-          max_iteration: int
+    def gauss_seidel(self, a, b, tol_typ, tol):
+        """#Takes an nxn matrix and a 1xn vector and solves for x by iterating until the
+            given tolerance (tol) is met. tol_type is a single character to indicate absolute
+            or relative convergence ('a' or 'r').Prints the solution and required iterations
+            to meet the tolerance."""
+        print("Trying to solve equations using the Gauss-Seidel method")
+        print ("A matrix",a)
+        print ("b matrix",b)
+        shape = np.shape(a)
+        tol_type = tol_typ
+        m = shape[0]
+        n = shape[1]
 
-          Returns
-          -------
-          list of floats
-              solution to the system of linear equation
+        if m != n:
+            print("This solver only works for square matrices")
+            print("This matrix is %dx%d." % (m, n))
+            exit(1)
 
-          Raises
-          ------
-          ValueError
-              Solution does not converge
-          """
-        n = len(m)
-        x0 = [0] * n if x0 == None else x0
-        x1 = x0[:]
+        if m != np.shape(b)[0]:
+            print("b must be the same dimensions as A.")
+            print("b appears to be %d elements long" % np.shape(b)[0])
+            exit(1)
 
-        for __ in range(max_iteration):
-            for i in range(n):
-              s = sum(-m[i][j] * x1[j] for j in range(n) if i != j)
-              x1[i] = (m[i][n] + s) / m[i][i]
-            if all(abs(x1[i]-x0[i]) < eps for i in range(n)):
-              return x1
-            x0 = x1[:]
-        raise ValueError('Solution does not converge')
+        x = np.zeros(np.shape(b))
+        sum = np.zeros(np.shape(b))
+        prev_x = np.zeros(np.shape(b))
+        diff = np.zeros(np.shape(b))
+
+        if tol_type in "a":
+            numpy_solution = np.linalg.solve(a, b);
+
+        num_iterations = 0
+        error = tol + 1 # Mock up error parameter only to run the While
+        while error > tol:
+            for i in range(m):
+                prev_x[i] = x[i]
+                sum[i] = b[i]
+                for j in range(n):
+                    if i != j:
+                        sum[i] = sum[i] - a[i][j] * x[j]
+                sum[i] = sum[i] / a[i][i]
+                x[i] = sum[i]
+            num_iterations += 1
+            if tol_type in "a":
+                # print("Absolute tolerance")
+                diff = np.subtract(x, numpy_solution)
+                error = np.linalg.norm(diff) / np.linalg.norm(x)
+            if tol_type in "r":
+                diff = np.subtract(x, prev_x)
+                error = np.linalg.norm(diff) / np.linalg.norm(x)
+
+        if tol_type in "a":
+            print("Using GaussSeidel to converge to an absolute error of %.8f requiring %d iterations." % (
+            tol, num_iterations))
+            print("The solution is:")
+            print(x)
+        if tol_type in "r":
+            print(
+            "Using GaussSeidel to converge to a relative error of %.8f requiring %d iterations." % (tol, num_iterations))
+            print("The solution is:")
+            print(x)
+        return x
+
+
+
+
+
+
+
+
 
 
 
