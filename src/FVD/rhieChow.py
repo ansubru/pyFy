@@ -97,7 +97,29 @@ class rhieChow(object):
 
                 elif(m == 0 and n == 1): #Second cell bordering left edge (sans edges)
 #West faces
-                    coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n]) # Pw = Pp (zero gradient bc)
+                    coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n-1]) # Pw = Pp (zero gradient bc)
+                    coeff2w[m][n] = dy/(dx*4.0*aP[m][n])
+                    pcorrw[m][n] = coeff1w[m][n]/coeff2w[m][n]
+                    ufw[m][n] = ufw[m][n] + pcorrw[m][n]
+#East faces
+                    coeff1e[m][n] = (Px[m][n+2] - (3.0*Px[m][n+1]) + (3.0*Px[m][n]) - Px[m][n-1]) # Pw = Pp (zero gradient bc)
+                    coeff2e[m][n] = dy/(dx*4.0*aP[m][n])
+                    pcorre[m][n] = coeff1e[m][n]/coeff2e[m][n]
+                    ufe[m][n] = ufe[m][n] + pcorre[m][n]
+#South faces
+                    coeff1s[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m+1][n]) - Px[m+2][n]) # Pn = Pp (zero gradient bc)
+                    coeff2s[m][n] = dx/(dy*4.0*aP[m][n])
+                    pcorrs[m][n] = coeff1s[m][n]/coeff2s[m][n]
+                    ufs[m][n] = ufs[m][n] + pcorrs[m][n]
+#North faces
+                    coeff1n[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m][n]) - Px[m+1][n]) # Pn = Pp (zero gradient bc)
+                    coeff2n[m][n] = dx/(dy*4.0*aP[m][n])
+                    pcorrn[m][n] = coeff1n[m][n]/coeff2n[m][n]
+                    ufs[m][n] = ufs[m][n] + pcorrn[m][n]
+
+                elif(m == 0 and n != 1 and n < (j-2) ): #First row bordering the BC --> B (sans 2 edge cells on either sides)
+#West faces
+                    coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n-2]) # Pw = Pp (zero gradient bc)
                     coeff2w[m][n] = dy/(dx*4.0*aP[m][n])
                     pcorrw[m][n] = coeff1w[m][n]/coeff2w[m][n]
                     ufw[m][n] = ufw[m][n] + pcorrw[m][n]
@@ -117,14 +139,58 @@ class rhieChow(object):
                     pcorrn[m][n] = coeff1n[m][n]/coeff2n[m][n]
                     ufs[m][n] = ufs[m][n] + pcorrn[m][n]
 
-                elif(m == 0 and n != 1 and n < (j-2) and i>3 and j>3): #First row bordering the BC --> B (sans 2 edge cells on either sides)1
+                elif(m == 0 and n == (j-2) ): #Cell before right edge
 #West faces
                     coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n-2]) # Pw = Pp (zero gradient bc)
                     coeff2w[m][n] = dy/(dx*4.0*aP[m][n])
                     pcorrw[m][n] = coeff1w[m][n]/coeff2w[m][n]
                     ufw[m][n] = ufw[m][n] + pcorrw[m][n]
 #East faces
-                    coeff1e[m][n] = (Px[m][n+2] - (3.0*Px[m][n+1]) + (3.0*Px[m][n]) - Px[m][n]) # Pw = Pp (zero gradient bc)
+                    coeff1e[m][n] = (Px[m][n+1] - (3.0*Px[m][n+1]) + (3.0*Px[m][n]) - Px[m][n-1]) # Pw = Pp (zero gradient bc)
+                    coeff2e[m][n] = dy/(dx*4.0*aP[m][n])
+                    pcorre[m][n] = coeff1e[m][n]/coeff2e[m][n]
+                    ufe[m][n] = ufe[m][n] + pcorre[m][n]
+#South faces
+                    coeff1s[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m+1][n]) - Px[m+2][n]) # Pn = Pp (zero gradient bc)
+                    coeff2s[m][n] = dx/(dy*4.0*aP[m][n])
+                    pcorrs[m][n] = coeff1s[m][n]/coeff2s[m][n]
+                    ufs[m][n] = ufs[m][n] + pcorrs[m][n]
+#North faces
+                    coeff1n[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m][n]) - Px[m+1][n]) # Pn = Pp (zero gradient bc)
+                    coeff2n[m][n] = dx/(dy*4.0*aP[m][n])
+                    pcorrn[m][n] = coeff1n[m][n]/coeff2n[m][n]
+                    ufs[m][n] = ufs[m][n] + pcorrn[m][n]
+
+                elif(m == 0 and n == (j-1) ): #Cell at right edge
+#West faces
+                    coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n-2]) # Pw = Pp (zero gradient bc)
+                    coeff2w[m][n] = dy/(dx*4.0*aP[m][n])
+                    pcorrw[m][n] = coeff1w[m][n]/coeff2w[m][n]
+                    ufw[m][n] = ufw[m][n] + pcorrw[m][n]
+#East faces
+                    coeff1e[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m][n]) - Px[m][n-1]) # Pw = Pp (zero gradient bc)
+                    coeff2e[m][n] = dy/(dx*4.0*aP[m][n])
+                    pcorre[m][n] = coeff1e[m][n]/coeff2e[m][n]
+                    ufe[m][n] = ufe[m][n] + pcorre[m][n]
+#South faces
+                    coeff1s[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m+1][n]) - Px[m+2][n]) # Pn = Pp (zero gradient bc)
+                    coeff2s[m][n] = dx/(dy*4.0*aP[m][n])
+                    pcorrs[m][n] = coeff1s[m][n]/coeff2s[m][n]
+                    ufs[m][n] = ufs[m][n] + pcorrs[m][n]
+#North faces
+                    coeff1n[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m][n]) - Px[m+1][n]) # Pn = Pp (zero gradient bc)
+                    coeff2n[m][n] = dx/(dy*4.0*aP[m][n])
+                    pcorrn[m][n] = coeff1n[m][n]/coeff2n[m][n]
+                    ufs[m][n] = ufs[m][n] + pcorrn[m][n]
+
+                elif(m == 0 and n == 0 ): #Second cell in the first column
+#West faces
+                    coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n-2]) # Pw = Pp (zero gradient bc)
+                    coeff2w[m][n] = dy/(dx*4.0*aP[m][n])
+                    pcorrw[m][n] = coeff1w[m][n]/coeff2w[m][n]
+                    ufw[m][n] = ufw[m][n] + pcorrw[m][n]
+#East faces
+                    coeff1e[m][n] = (Px[m][n] - (3.0*Px[m][n]) + (3.0*Px[m][n]) - Px[m][n-1]) # Pw = Pp (zero gradient bc)
                     coeff2e[m][n] = dy/(dx*4.0*aP[m][n])
                     pcorre[m][n] = coeff1e[m][n]/coeff2e[m][n]
                     ufe[m][n] = ufe[m][n] + pcorre[m][n]
