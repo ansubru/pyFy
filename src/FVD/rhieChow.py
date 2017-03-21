@@ -117,7 +117,7 @@ class rhieChow(object):
                     pcorrn[m][n] = coeff1n[m][n]/coeff2n[m][n]
                     ufs[m][n] = ufs[m][n] + pcorrn[m][n]
 
-                elif(m == 0 and n != 1 and n < (j-2) and i>3 and j>3): #First row bordering the BC --> B (sans 2 edge cells on either sides)
+                elif(m == 0 and n != 1 and n < (j-2) and i>3 and j>3): #First row bordering the BC --> B (sans 2 edge cells on either sides)1
 #West faces
                     coeff1w[m][n] = (Px[m][n+1] - (3.0*Px[m][n]) + (3.0*Px[m][n-1]) - Px[m][n-2]) # Pw = Pp (zero gradient bc)
                     coeff2w[m][n] = dy/(dx*4.0*aP[m][n])
