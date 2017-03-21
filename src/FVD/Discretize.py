@@ -96,14 +96,8 @@ class Discretize(object):
         i = np.size(matU,0)
         j = np.size(matU,1)
 #Diffusion conductance for an equidistant grid
-        NU = IO_obj.nu #viscosity nu (constant viscosity model)
-        rho = IO_obj.rho #Density in Kg/m3
-        mu = NU*rho #constant for all nodes
-        dx = IO_obj.x_dis # x-grid spacing
-
-
-        Dx = (NU*rho)/IO.x_dis
-        Dy = (NU*rho)/IO.y_dis
+        Dx = mu/IO.x_dis
+        Dy = mu/IO.y_dis
         coeff = 0.5 #Co-efficient for equidistant grid
         A = []
 
@@ -527,7 +521,7 @@ class Discretize(object):
                 By.append(SUymod[l][m])
 
 
-        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, A, Bx, By
+        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aP, aPmod, A, Bx, By
 
 
 

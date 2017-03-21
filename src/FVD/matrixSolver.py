@@ -74,26 +74,34 @@ disc_obj = Discretize()
 
 from gaussSiedel import gaussSiedel
 gs_obj = gaussSiedel()
-# Discretize U velocity using FOU
-Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
-print Bx
-## A matrix checks!
 
+
+#Step 1 : Solve for U using interpolated pressure using Discretize class obj
+# Discretize U velocity using FOU --> P is checkerboarded (no rhie-chow interpolation)
+# --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
+# --> Implicit under-relaxation due to non-linearity in pde's
+# --> Returns face values of flux and velocities along with A and b matrices
+
+Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aP, aPmod, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
+
+## A matrix checks!
 #Check if matrix A is diagonally dominant
 i = np.size(A,0) #get indices for rows
 j = np.size(A,1) #get indices for columns
-testA = np.ones(shape=(i, j))
 testVal = DDChk(i, j, A)
 
+#Step 2 : Solve for U using gauss seidel method
+# --> Returns U* (newU) which will be corrected using rhie-chow interpolation
 if testVal in "pass":
     reltol = 0.001
     toltype = "r"
     solve = gs_obj.gauss_seidel(np.array(A), np.array(Bx), toltype, reltol)
 np.array(solve)
 newU = solve.reshape(np.size(grid,0),np.size(grid,1))
-print newU
 
-
+#Step 3 : Discretize newU using FOU for rhie-chow interpolation using Discretize class obj
+# --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
+# --> Returns face values of flux and velocities along with A and b matrices
 
 
 

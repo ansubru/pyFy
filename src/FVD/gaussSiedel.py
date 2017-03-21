@@ -82,13 +82,9 @@ class gaussSiedel(object):
         if tol_type in "a":
             print("Using GaussSeidel to converge to an absolute error of %.8f requiring %d iterations." % (
             tol, num_iterations))
-            print("The solution is:")
-            print(x)
         if tol_type in "r":
             print(
             "Using GaussSeidel to converge to a relative error of %.8f requiring %d iterations." % (tol, num_iterations))
-            print("The solution is:")
-            print(x)
         return x
 
 
