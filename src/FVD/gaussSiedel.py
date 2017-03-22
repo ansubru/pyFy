@@ -34,8 +34,8 @@ class gaussSiedel(object):
             or relative convergence ('a' or 'r').Prints the solution and required iterations
             to meet the tolerance."""
         print("Trying to solve equations using the Gauss-Seidel method")
-        print ("A matrix",a)
-        print ("b matrix",b)
+        #print ("A matrix",a)
+        #print ("b matrix",b)
         shape = np.shape(a)
         tol_type = tol_typ
         m = shape[0]

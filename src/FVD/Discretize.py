@@ -90,6 +90,7 @@ class Discretize(object):
         dPx, dPy, Fe, Fw, Fn, Fs =   0.0*matU,  0.0*matU,  0.0*matU, \
                                           0.0*matU,  0.0*matU, 0.0*matU
         ufe, ufw, ufn, ufs = 0.0*u, 0.0*u, 0.0*u, 0.0*u #interpolated face velocities at each grid node
+
 #Calculate all relevant co-efficients
         aP, aPmod, aW, aE, aN, aS, SUx, SUxmod, SPx, SUy, SUymod, SPy = 0.0*matU, 0.0*matU, 0.0*matU,  0.0*matU,  0.0*matU,\
                                              0.0*matU,  0.0*matU,  0.0*matU,  0.0*matU, 0.0*matU, 0.0*matU, 0.0*matU
@@ -119,6 +120,7 @@ class Discretize(object):
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
                     aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+
 #South faces
                     ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m+1][n])
                     Fs[m][n] = rho*ufs[m][n]
@@ -520,8 +522,10 @@ class Discretize(object):
                 Bx.append(SUxmod[l][m])
                 By.append(SUymod[l][m])
 
+        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS, aP, aPmod, A, Bx, By
 
-        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aP, aPmod, A, Bx, By
+
+
 
 
 

@@ -1,9 +1,9 @@
 {
-        "domain":[3,3],
-        "xNodes":3,
-        "yNodes":3,
+        "domain":[1,1],
+        "xNodes":9,
+        "yNodes":9,
         "viscosity":0.001,
-        "rho":1.2,
+        "rho":1.0,
         "boundary-velocity":[1.0,1.0],
         "A-bound":"walls",
         "B-bound":"fixed velocity",
