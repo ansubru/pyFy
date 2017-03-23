@@ -115,7 +115,7 @@ interpFc_obj = interpToFace()
 aWw, aEe, aSs, aNn, aPe = interpFc_obj.faceInterp(newU,P)
 
 pp = pprint.PrettyPrinter(indent=6)
-pp.pprint(aWw)
+pp.pprint(aPe)
 
 
 
