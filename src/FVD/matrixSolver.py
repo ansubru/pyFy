@@ -172,7 +172,7 @@ from pressCorr import pressCorr
 pressCorr_obj = pressCorr()
 aWp, aEp, aSp, aNp, aPp= pressCorr_obj.pcorr(Ustar,P)
 
-#Fix boundaries for naumann bc's (zero pressure at cells close to the bcs)
+#Fix boundaries for naumann bc's (zero coeffs at cells close to the bcs)
 
 aWp = fixCoeffsP(aWp,side="W")
 aEp = fixCoeffsP(aEp,side="E")
