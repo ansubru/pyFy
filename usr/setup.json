@@ -1,7 +1,7 @@
 {
         "domain":[1,1],
-        "xNodes":9,
-        "yNodes":9,
+        "xNodes":10,
+        "yNodes":10,
         "viscosity":0.001,
         "rho":1.0,
         "boundary-velocity":[1.0,1.0],

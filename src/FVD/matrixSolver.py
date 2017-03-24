@@ -45,6 +45,52 @@ def DDChk(i,j,A):
     print state
     return state
 
+def calcBterm (rho,ufw, ufe, ufs, ufn):
+    b = rho*ufw - rho*ufe + rho*ufs - rho*ufn
+    return b
+
+def fixCoeffsP (coeff,side):
+    i = np.size(coeff, 0)
+    j = np.size(coeff, 1)
+
+    if side in 'W':
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  != (i-1) and n == 0 :
+                    coeff[m][n] = 0.0
+
+                if m  == (i-1) and n == 0 :
+                    coeff[m][n] = 0.0
+
+    if side in 'E':
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  != (i-1) and n == j-1 :
+                    coeff[m][n] = 0.0
+
+                if m  == (i-1) and n == j-1 :
+                    coeff[m][n] = 0.0
+
+    if side in 'S':
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  == (i-1) and n != j-1 :
+                    coeff[m][n] = 0.0
+
+                if m  == (i-1) and n == j-1 :
+                    coeff[m][n] = 0.0
+    return coeff
+
+def setPress(P):
+    i = np.size(P, 0)
+    j = np.size(P, 1)
+    for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  == 1 and n == 1 :
+                    P[m][n] = 0.0
+                else:
+                    P[m][n] = P[m][n] - P[1][1]
+    return P
 #############################################################################################################################################################################################################
 ###----------------------------------------------------------------------------CLASS DEFINITION-----------------------------------------------------------------------------------------------###
 ###############------------CREATE IO OBJECT--------------################
@@ -52,6 +98,11 @@ def DDChk(i,j,A):
 from IO import IO
 IO_obj = IO("random")
 grid = IO_obj.grid_nodes #generate a base grid node layout
+NU = IO_obj.nu #viscosity nu (constant viscosity model)
+rho = IO_obj.rho #Density in Kg/m3
+mu = NU*rho #constant for all nodes
+dx = IO_obj.x_dis # x-grid spacing
+dy = IO_obj.y_dis # y-grid spacing
 
 #Boundary conditions
 UA = IO_obj.UA
@@ -72,8 +123,8 @@ P = 0.0*grid
 from Discretize import Discretize
 disc_obj = Discretize()
 
-from gaussSiedel import gaussSiedel
-gs_obj = gaussSiedel()
+from gaussSeidel2 import gaussSiedel2
+gs_obj = gaussSiedel2()
 
 
 #Step 1 : Solve for U using interpolated pressure using Discretize class obj
@@ -82,22 +133,18 @@ gs_obj = gaussSiedel()
 # --> Implicit under-relaxation due to non-linearity in pde's
 # --> Returns face values of flux and velocities along with A and b matrices
 
-Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS, aP, aPmod, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
+Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
 
 ## A matrix checks!
 #Check if matrix A is diagonally dominant
-i = np.size(A,0) #get indices for rows
-j = np.size(A,1) #get indices for columns
+i = np.size(U,0) #get indices for rows
+j = np.size(U,1) #get indices for columns
 testVal = DDChk(i, j, A)
 
 #Step 2 : Solve for U using gauss seidel method
 # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
-if testVal in "pass":
-    reltol = 0.001
-    toltype = "r"
-    solve = gs_obj.gauss_seidel(np.array(A), np.array(Bx), toltype, reltol)
-np.array(solve)
-newU = solve.reshape(np.size(grid,0),np.size(grid,1))
+iters = 5
+Ustar = gs_obj.gaussSeidel2u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
 
 #Step 3 : Discretize newU using FOU for rhie-chow interpolation using Discretize class obj
 # --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
@@ -105,19 +152,43 @@ newU = solve.reshape(np.size(grid,0),np.size(grid,1))
 
 from rhieChow import rhieChow
 rc_obj = rhieChow()
+ufwrc, uferc, ufnrc, ufsrc, pcorrw, pcorre, pcorrn, pcorrs = rc_obj.rcInterp(Ustar,P)
 
-ufwrc, uferc, ufnrc, ufsrc, pcorrw, pcorre, pcorrn, pcorrs = rc_obj.rcInterp(newU,P)
+#Step 4 : Solve P' equation
+# --> Calculates co-eff aP, aW, aW, aN, aS, at faces
+# --> Calculates b matrix (Fw - Fe + Fs - Fn)
+# --> Solve P' using gauss seidel
 
-from interpToFace import interpToFace
+#Create the b term (continuity)
 
-interpFc_obj = interpToFace()
+b = 0.0*Ustar
+for m in range(i): #loop through rows
+    for n in range(j): #loop through columns
+        b[m][n] = calcBterm(rho,ufwrc[m][n],uferc[m][n],ufsrc[m][n],ufnrc[m][n])
 
-aWw, aEe, aSs, aNn, aPe = interpFc_obj.faceInterp(newU,P)
+#Get face interpolated final coeffs for pressure correction equation
 
-pp = pprint.PrettyPrinter(indent=6)
-pp.pprint(aPe)
+from pressCorr import pressCorr
+pressCorr_obj = pressCorr()
+aWp, aEp, aSp, aNp, aPp= pressCorr_obj.pcorr(Ustar,P)
 
+#Fix boundaries for naumann bc's (zero pressure at cells close to the bcs)
 
+aWp = fixCoeffsP(aWp,side="W")
+aEp = fixCoeffsP(aEp,side="E")
+aSp = fixCoeffsP(aSp,side="S")
+
+#Solve P'
+Pprime = gs_obj.gaussSeidel2u(P, aWp, aEp, aNp, aSp, aPp, b , iters)
+
+#Step 5 : Set pressure based on value at cell (2,2)
+
+#Set P' level
+Pset = setPress(Pprime)
+print Pset
+
+#Step 6 : Fix face velocities - Pressure straddling
+#Unew =
 
 
 

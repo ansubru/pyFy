@@ -68,135 +68,115 @@ class interpToFace(object):
 
         # Get velocities
 
-        Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS, aP, aPmod, A, Bx, By = disc_obj.FOU_disc(u,p, UA, UB, UC, UD)
+        Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, anotpW, anotpE, anotpN, anotpS,aW, aE, aN, aS, aP, aPmod, SUxmod, SUymod, A, Bx, By = disc_obj.FOU_disc(u,p, UA, UB, UC, UD)
 
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)
-        print i,j
-        aEe, aWw, aNn, aSs, aPe = 0.0*u, 0.0*u, 0.0*u, 0.0*u ,0.0*u  # interpolated co-eff to faces
-        print aPe
+        aPe = 0.0*u  # interpolated co-eff to faces
+        aPw, aPs, aPn = 0.0*u, 0.0*u, 0.0*u
 
         for m in range(i):  # loop through rows
-            print m
             for n in range(j):  # loop through columns
-                print n
                 if (m == 0 and n == 0):  # cells in the top left edge
 
                     # West faces
-                    aWw[m][n] = aW[m][n]
+                    aPw[m][n] = aPmod[m][n]
 
                     # East faces
-                    aEe[m][n] = Interp_obj.lin_interp(aE[m][n], aE[m][n+1])
+                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
 
                     # South faces
-                    aSs[m][n] = Interp_obj.lin_interp(aS[m][n], aS[m+1][n])
+                    aPs[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m+1][n])
 
                     # North faces
-                    aNn[m][n] = aN[m][n]
-
-                    # aP term
-                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
+                    aPn[m][n] = aPmod[m][n]
 
                 elif m == 0 and n != (j-1):  # First row bordering the BC --> B (sans edges)
 
                     # West faces
-                    aWw[m][n] = Interp_obj.lin_interp(aW[m][n - 1], aW[m][n])
+                    aPw[m][n] = Interp_obj.lin_interp(aPmod[m][n - 1], aPmod[m][n])
 
                     # East faces
-                    aEe[m][n] = Interp_obj.lin_interp(aE[m][n], aE[m][n + 1])
+                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n + 1])
 
                     # South faces
-                    aSs[m][n] = Interp_obj.lin_interp(aS[m][n], aS[m + 1][n])
+                    aPs[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m + 1][n])
 
                     # North faces
-                    aNn[m][n] = aN[m][n]
-
-                    # aP term
-                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n + 1])
+                    aPn[m][n] = aPmod[m][n]
 
                 elif m == 0 and n == (j-1):  # Top right edge
 
                     # West faces
-                    aWw[m][n] = Interp_obj.lin_interp(aW[m][n-1], aW[m][n])
+                    aPw[m][n] = Interp_obj.lin_interp(aPmod[m][n-1], aPmod[m][n])
 
                     # East faces
-                    aEe[m][n] = aE[m][n]
-
-                    # South faces
-                    aSs[m][n] = Interp_obj.lin_interp(aS[m][n], aS[m+1][n])
-
-                    # North faces
-                    aNn[m][n] = aN[m][n]
-
-                    # aP term
-
                     aPe[m][n] = aPmod[m][n]
 
-                elif m == (i-1) and n == 0:  # bottom left edge
-                    print m, n
-                    # West faces
-                    aWw[m][n] = aW[m][n]
-
-                    # East faces
-                    aEe[m][n] = Interp_obj.lin_interp(aE[m][n], aE[m][n+1])
-
                     # South faces
-                    aSs[m][n] = aS[m][n]
+                    aPs[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m+1][n])
 
                     # North faces
-                    aNn[m][n] = Interp_obj.lin_interp(aN[m][n], aN[m-1][n])
+                    aPn[m][n] = aPmod[m][n]
 
-                    # aP term
+                elif m == (i-1) and n == 0:  # bottom left edge
+
+                    # West faces
+                    aPw[m][n] = aPmod[m][n]
+
+                    # East faces
                     aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
+
+                    # South faces
+                    aPs[m][n] = aPmod[m][n]
+
+                    # North faces
+                    aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m-1][n])
 
                 elif (m == (i-1) and n != (j-1)):  # Bottom row bordering the BC --> D  (sans edges)
 
                     # West faces
-                    aWw[m][n] = Interp_obj.lin_interp(aW[m][n-1], aW[m][n])
+                    aPw[m][n] = Interp_obj.lin_interp(aPmod[m][n-1], aPmod[m][n])
 
                     # East faces
-                    aEe[m][n] = Interp_obj.lin_interp(aE[m][n], aE[m][n+1])
+                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
 
                     # South faces
-                    aSs[m][n] = aS[m][n]
+                    aPs[m][n] = aPmod[m][n]
 
                     # North faces
-                    aNn[m][n] = Interp_obj.lin_interp(aN[m][n], aN[m-1][n])
-
-                    # aP term
-                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
+                    aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m-1][n])
 
                 elif (m != (i-1) and n == 0):  # First column bordering the BC --> A  (sans edges)
 
                     # West faces
-                    aWw[m][n] = aW[m][n]
+
+                    aPw[m][n] = aPmod[m][n]
 
                     # East faces
-                    aEe[m][n] = Interp_obj.lin_interp(aE[m][n], aE[m][n+1])
+
+                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
 
                     # South faces
-                    aSs[m][n] = Interp_obj.lin_interp(aS[m+1][n], aS[m][n])
+                    aPs[m][n] = Interp_obj.lin_interp(aPmod[m+1][n], aPmod[m][n])
 
                     # North faces
-                    aNn[m][n] = Interp_obj.lin_interp(aN[m][n], aN[m-1][n])
-
-                    # aP term
-                    aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
+                    aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m-1][n])
 
                 elif (m == (i-1) and n == (j-1)):  # Bottom right edge
 
                     # West faces
-                    aWw[m][n] = Interp_obj.lin_interp(aW[m][n-1], aW[m][n])
+                    aPw[m][n] = Interp_obj.lin_interp(aPmod[m][n-1], aPmod[m][n])
 
                     # East faces
-                    aEe[m][n] = aE[m][n]
+                    aPe[m][n] = aPmod[m][n]
 
                     # South faces
-                    aSs[m][n] = aS[m][n]
+                    aPs[m][n] = aPmod[m][n]
 
                     # North faces
-                    aNn[m][n] = Interp_obj.lin_interp(aNn[m][n], aNn[m-1][n])
+                    aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m-1][n])
 
                     # aP term
                     aPe[m][n] = aPmod[m][n]
@@ -205,35 +185,30 @@ class interpToFace(object):
                 elif (m != (i-1) and n == (j-1)):  # Right (last) column bordering the BC --> C  (sans edges)
 
                     # West faces
-                    aWw[m][n] = Interp_obj.lin_interp(aW[m][n-1], aW[m][n])
+                    aPw[m][n] = Interp_obj.lin_interp(aPmod[m][n-1], aPmod[m][n])
 
                     # East faces
-                    aEe[m][n] = aE[m][n]
+                    aPe[m][n] = aPmod[m][n]
 
                     # South faces
-                    aSs[m][n] = Interp_obj.lin_interp(aS[m][n], aS[m+1][n])
+                    aPs[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m+1][n])
 
                     # North faces
-                    aNn[m][n] = Interp_obj.lin_interp(aN[m][n], aN[m-1][n])
-
-                    # aP term
-                    aPe[m][n] = aPmod[m][n]
+                    aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m-1][n])
 
                 elif m != 0 and n != 0 and m != (i-1) and n != (j-1):  # All other elements
 
                     # West faces
-                    aWw[m][n] = Interp_obj.lin_interp(aW[m][n-1], aW[m][n])
+                    aPw[m][n] = Interp_obj.lin_interp(aPmod[m][n-1], aPmod[m][n])
 
                     # East faces
-                    aEe[m][n] = Interp_obj.lin_interp(aE[m][n], aE[m][n+1])
-
-                    # South faces
-                    aSs[m][n] = Interp_obj.lin_interp(aS[m][n], aS[m+1][n])
-
-                    # North faces
-                    aNn[m][n] = Interp_obj.lin_interp(aN[m][n], aN[m-1][n])
-
-                    # aP term
                     aPe[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n+1])
 
-        return aWw, aEe, aSs, aNn, aPe
+                    # South faces
+                    aPs[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m+1][n])
+
+                    # North faces
+                    aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m-1][n])
+
+
+        return aPw, aPe, aPs, aPn

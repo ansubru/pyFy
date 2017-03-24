@@ -92,8 +92,10 @@ class Discretize(object):
         ufe, ufw, ufn, ufs = 0.0*u, 0.0*u, 0.0*u, 0.0*u #interpolated face velocities at each grid node
 
 #Calculate all relevant co-efficients
-        aP, aPmod, aW, aE, aN, aS, SUx, SUxmod, SPx, SUy, SUymod, SPy = 0.0*matU, 0.0*matU, 0.0*matU,  0.0*matU,  0.0*matU,\
-                                             0.0*matU,  0.0*matU,  0.0*matU,  0.0*matU, 0.0*matU, 0.0*matU, 0.0*matU
+        aP, aPmod, aW, aWp, aE, aEp, aN, aNp, aS, aSp = 0.0*matU, 0.0*matU, 0.0*matU,  0.0*matU,  0.0*matU,0.0*matU,\
+                                                        0.0*matU, 0.0*matU,  0.0*matU,  0.0*matU
+        SUx, SUxmod, SPx, SUy, SUymod, SPy = 0.0*matU, 0.0*matU, 0.0*matU,  0.0*matU,  0.0*matU,0.0*matU
+
         i = np.size(matU,0)
         j = np.size(matU,1)
 #Diffusion conductance for an equidistant grid
@@ -116,6 +118,7 @@ class Discretize(object):
                     Fw[m][n] = rho*ufw[m][n]
                     aW[m][n] = 0.0
 
+
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
@@ -125,10 +128,12 @@ class Discretize(object):
                     ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m+1][n])
                     Fs[m][n] = rho*ufs[m][n]
                     aS[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+
 #North faces
                     ufn[m][n] = UB
                     Fn[m][n] = rho*ufn[m][n]
                     aN[m][n] = 0.0
+
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -150,6 +155,12 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+
+                    #coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
 
                 elif(m == 0 and n != (j-1)): #First row bordering the BC --> B (sans edges)
 #source terms
@@ -197,6 +208,13 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
                 elif(m == 0 and n == (j-1)): #Top right edge
 #source terms
                     dPx[m][n] = (Interp_obj.CD_interp(Px[m][n-1], Px[m][n], dx))*coeff
@@ -242,6 +260,12 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
                 elif(m == (i-1) and n == 0): #bottom left edge
 #source terms
                     dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n], Px[m][n+1], dx))
@@ -286,6 +310,12 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
                 elif(m  == (i-1) and n != (j-1)): #Bottom row bordering the BC --> D  (sans edges)
 #source terms
                     dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n-1], Px[m][n+1], dx))
@@ -330,6 +360,12 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
                 elif(m  != (i-1) and n == 0): #First column bordering the BC --> A  (sans edges)
 #source terms
                     dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n], Px[m][n+1], dx))
@@ -376,6 +412,11 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
 
                 elif(m == (i-1) and n == (j-1)): #Bottom right edge
 #source terms
@@ -422,6 +463,12 @@ class Discretize(object):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
 
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
                 elif(m != (i-1) and n == (j-1)): #Right (last) column bordering the BC --> C  (sans edges)
 #source terms
                     dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n-1], Px[m][n], dx))
@@ -467,6 +514,13 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
                 elif(m != 0 and n != 0 and m != (i-1) and n != (j-1)): #All other elements
 #source terms
                     dPx[m][n] = coeff*(Interp_obj.CD_interp(Px[m][n-1], Px[m][n+1], dx))
@@ -514,6 +568,13 @@ class Discretize(object):
                         for b in range(j):
                             amat = np.append(amat,tempU[a][b])
                     A.append(amat)
+
+#coeff- Terms for p' equation (HACK!)
+                    aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
+                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
+                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+
 #B matrix generation
         Bx = []
         By = []
@@ -522,7 +583,7 @@ class Discretize(object):
                 Bx.append(SUxmod[l][m])
                 By.append(SUymod[l][m])
 
-        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS, aP, aPmod, A, Bx, By
+        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By
 
 
 

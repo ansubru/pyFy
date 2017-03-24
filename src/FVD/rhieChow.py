@@ -82,7 +82,7 @@ class rhieChow(object):
         #obtain face velocities using the Discretize class obj
         from Discretize import Discretize
         disc_obj = Discretize()
-        Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS, aP1notmod, aP, A, Bx, By = disc_obj.FOU_disc(u, Px, UA, UB, UC, UD)
+        Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS, aWp, aEp, aNp, aSp, anotmodP, aP, SUxmod, SUymod, A, Bx, By = disc_obj.FOU_disc(u, Px, UA, UB, UC, UD)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)
