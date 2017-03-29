@@ -58,7 +58,8 @@ class rhieChow(object):
             return coeff1n
 
         u = 1.0*matU
-        Px = 1.0*matP
+
+        Px = 1*matP
         #Get BC's
         from IO import IO
         IO_obj = IO("random")

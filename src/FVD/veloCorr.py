@@ -23,12 +23,11 @@ import pprint
 ###----------------------------------------------------------------------------CLASS DEFINITION-----------------------------------------------------------------------------------------------###
 class veloCorr(object):
 
-    """A class for discretizing relevant nodes and returning cell and face coefficients
+    """A class for correcting velocity using pressure straddling
 
     Attributes:
-       U --> Feed in U velocity (x-direction)
-       v --> Feed in V velocity (y-direction)
-       Specify U or V boundary values
+       U --> Feed in U grid velocities (x-direction)
+       v --> Feed in V grid velocity (y-direction)
     """
 
     def __init__(self):

@@ -122,7 +122,7 @@ class Discretize(object):
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aE[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
 
 #South faces
                     ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m+1][n])
@@ -158,9 +158,9 @@ class Discretize(object):
 
                     #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m == 0 and n != (j-1)): #First row bordering the BC --> B (sans edges)
 #source terms
@@ -176,7 +176,7 @@ class Discretize(object):
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aE[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
 #South faces
                     ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m+1][n])
                     Fs[m][n] = rho*ufs[m][n]
@@ -211,9 +211,9 @@ class Discretize(object):
 
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m == 0 and n == (j-1)): #Top right edge
 #source terms
@@ -262,9 +262,9 @@ class Discretize(object):
                     A.append(amat)
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m == (i-1) and n == 0): #bottom left edge
 #source terms
@@ -281,7 +281,7 @@ class Discretize(object):
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aE[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
 #South faces
                     ufs[m][n] = UD
                     Fs[m][n] = rho*ufs[m][n]
@@ -289,7 +289,7 @@ class Discretize(object):
 #North faces
                     ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
                     Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aN[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -312,9 +312,9 @@ class Discretize(object):
                     A.append(amat)
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m  == (i-1) and n != (j-1)): #Bottom row bordering the BC --> D  (sans edges)
 #source terms
@@ -330,7 +330,7 @@ class Discretize(object):
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aE[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
 #South faces
                     ufs[m][n] = UD
                     Fs[m][n] = rho*ufs[m][n]
@@ -338,7 +338,7 @@ class Discretize(object):
 #North faces
                     ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
                     Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aN[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -362,9 +362,9 @@ class Discretize(object):
                     A.append(amat)
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m  != (i-1) and n == 0): #First column bordering the BC --> A  (sans edges)
 #source terms
@@ -380,7 +380,7 @@ class Discretize(object):
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aE[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
 #South faces
                     ufs[m][n] = Interp_obj.lin_interp(u[m+1][n], u[m][n])
                     Fs[m][n] = rho*ufs[m][n]
@@ -389,7 +389,7 @@ class Discretize(object):
 #North faces
                     ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
                     Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aN[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -414,9 +414,9 @@ class Discretize(object):
                     A.append(amat)
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m == (i-1) and n == (j-1)): #Bottom right edge
 #source terms
@@ -440,7 +440,7 @@ class Discretize(object):
 #North faces
                     ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
                     Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aN[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -465,9 +465,9 @@ class Discretize(object):
 
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m != (i-1) and n == (j-1)): #Right (last) column bordering the BC --> C  (sans edges)
 #source terms
@@ -491,7 +491,7 @@ class Discretize(object):
 #North faces
                     ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
                     Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aN[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -517,9 +517,9 @@ class Discretize(object):
 
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
                 elif(m != 0 and n != 0 and m != (i-1) and n != (j-1)): #All other elements
 #source terms
@@ -535,7 +535,7 @@ class Discretize(object):
 #East faces
                     ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
-                    aE[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aE[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
 #South faces
                     ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m+1][n])
                     Fs[m][n] = rho*ufs[m][n]
@@ -543,7 +543,7 @@ class Discretize(object):
 #North faces
                     ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
                     Fn[m][n] = rho*ufn[m][n]
-                    aN[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aN[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
                                 + Fe[m][n] - Fw[m][n] + Fn[m][n] - Fs[m][n]
@@ -571,9 +571,9 @@ class Discretize(object):
 
 #coeff- Terms for p' equation (HACK!)
                     aWp[m][n] = (Dx + max(0.0, Fw[m][n]))*dy
-                    aEp[m][n] = (Dx - max(0.0, -Fe[m][n]))*dy
+                    aEp[m][n] = (Dx + max(0.0, -Fe[m][n]))*dy
                     aSp[m][n] = (Dy + max(0.0, Fs[m][n]))*dx
-                    aNp[m][n] = (Dy - max(0.0, -Fn[m][n]))*dx
+                    aNp[m][n] = (Dy + max(0.0, -Fn[m][n]))*dx
 
 #B matrix generation
         Bx = []

@@ -20,33 +20,9 @@ import Interpolate
 import pprint
 
 ########################################################################FUNCTION DEF######################################################################################################################
-def DDChk(i,j,A):
-    sum = np.zeros((i, 1), dtype=float)
-    flag = []
-    for m in range(i):
-        for n in range(j):
-            if m != n:
-                sum[m] = sum[m] + abs(A[m][n])
 
-    for m in range(i):
-        for n in range(j):
-            if m == n:
-                if A[m][n] > sum[m]:
-                    flag.append("DD")
-                else:
-                    flag.append("NXD")
-
-    for m in range(flag.__len__()):
-        if flag[m] in "NXD":
-            print ("Critical error! Matrix is not diagonally dominant at row ",m)
-            state = "fail"
-        else:
-            state = "pass"
-    print state
-    return state
-
-def calcBterm (rho,ufw, ufe, ufs, ufn):
-    b = rho*ufw - rho*ufe + rho*ufs - rho*ufn
+def calcBterm (rho,ufw, ufe, ufs, ufn,dx,dy):
+    b = rho*ufw*dy - rho*ufe*dy + rho*ufs*dx - rho*ufn*dx
     return b
 
 def fixCoeffsP (coeff,side):
@@ -91,6 +67,15 @@ def setPress(P):
                 else:
                     P[m][n] = P[m][n] - P[1][1]
     return P
+
+def rlxP(P, PP, coeff):
+    i = np.size(P, 0)
+    j = np.size(P, 1)
+    pPnew = 0.0*P
+    for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                pPnew[m][n] = P[m][n] + coeff*PP[m][n]
+    return pPnew
 #############################################################################################################################################################################################################
 ###----------------------------------------------------------------------------CLASS DEFINITION-----------------------------------------------------------------------------------------------###
 ###############------------CREATE IO OBJECT--------------################
@@ -126,8 +111,16 @@ disc_obj = Discretize()
 from gaussSeidel2 import gaussSiedel2
 gs_obj = gaussSiedel2()
 
+from gaussSiedel import gaussSiedel
+gs_obj1 = gaussSiedel()
 
-#Step 1 : Solve for U using interpolated pressure using Discretize class obj
+###################################Controls for iterations####################################################################
+
+iters = 5 #number of gauss seidel sweeps
+alpha = 0.5 #Under relaxation
+
+###################################Controls for iterations####################################################################
+#Step 1a : Solve for U using interpolated pressure using Discretize class obj
 # Discretize U velocity using FOU --> P is checkerboarded (no rhie-chow interpolation)
 # --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
 # --> Implicit under-relaxation due to non-linearity in pde's
@@ -135,17 +128,17 @@ gs_obj = gaussSiedel2()
 
 Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By = disc_obj.FOU_disc(U,P, UA, UB, UC, UD)
 
-## A matrix checks!
-#Check if matrix A is diagonally dominant
 i = np.size(U,0) #get indices for rows
 j = np.size(U,1) #get indices for columns
-testVal = DDChk(i, j, A)
+
 
 #Step 2 : Solve for U using gauss seidel method
 # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
-iters = 5
+print "Solving for Ustar using gauss seidel"
+
 Ustar = gs_obj.gaussSeidel2u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
 
+print "Done with %d sweeps" %(iters,)
 #Step 3 : Discretize newU using FOU for rhie-chow interpolation using Discretize class obj
 # --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
 # --> Returns face values of flux and velocities along with A and b matrices
@@ -154,7 +147,47 @@ from rhieChow import rhieChow
 rc_obj = rhieChow()
 ufwrc, uferc, ufnrc, ufsrc, pcorrw, pcorre, pcorrn, pcorrs = rc_obj.rcInterp(Ustar,P)
 
-#Step 4 : Solve P' equation
+# Get velocities from face to grid nodes
+from interpToGrid import interpToGrid
+intrgrd_obj = interpToGrid()
+Uprc = intrgrd_obj.gridInterpU(ufwrc, uferc)
+
+#Step 1a : Solve for V using interpolated pressure using Discretize class obj
+# Discretize U velocity using FOU --> P is checkerboarded (no rhie-chow interpolation)
+# --> Calculates co-ef aP, aW, aW, aN, aS, and Sources
+# --> Implicit under-relaxation due to non-linearity in pde's
+# --> Returns face values of flux and velocities along with A and b matrices
+
+Fev, Fwv, Fnv, Fsv, ufev, ufwv, ufnv, ufsv, aWv, aEv, aNv, aSv,aWpv, aEpv, aNpv, aSpv, aPv, aPmodv, SUxmodv, SUymodv, Av, Bxv, Byv = disc_obj.FOU_disc(V,P, VA, VB, VC, VD)
+
+i = np.size(V,0) #get indices for rows
+j = np.size(V,1) #get indices for columns
+
+
+#Step 2 : Solve for V using gauss seidel method
+# --> Returns V* (newV) which will be corrected using rhie-chow interpolation
+
+print "Solving for Vstar using gauss seidel"
+
+Vstar = gs_obj.gaussSeidel2u(V, aWv, aEv, aNv, aSv, aPmodv,SUymodv, iters)
+
+print "Done with %d sweeps" %(iters,)
+
+#Step 3 : Discretize newV using FOU for rhie-chow interpolation using Discretize class obj
+# --> Calculates co-eff aPv, aWv, aWv, aNv, aSv, and Sources
+# --> Returns face values of flux and velocities along with A and b matrices
+
+from rhieChow import rhieChow
+rc_obj = rhieChow()
+vfwrc, vferc, vfnrc, vfsrc, pcorrwv, pcorrev, pcorrnv, pcorrsv = rc_obj.rcInterp(Vstar,P)
+
+# Get velocities from face to grid nodes
+from interpToGrid import interpToGrid
+intrgrd_obj = interpToGrid()
+Vprc = intrgrd_obj.gridInterpU(vfwrc, vferc)
+
+
+#Step 4 : Solve P' equation using U velocities
 # --> Calculates co-eff aP, aW, aW, aN, aS, at faces
 # --> Calculates b matrix (Fw - Fe + Fs - Fn)
 # --> Solve P' using gauss seidel
@@ -164,7 +197,7 @@ ufwrc, uferc, ufnrc, ufsrc, pcorrw, pcorre, pcorrn, pcorrs = rc_obj.rcInterp(Ust
 b = 0.0*Ustar
 for m in range(i): #loop through rows
     for n in range(j): #loop through columns
-        b[m][n] = calcBterm(rho,ufwrc[m][n],uferc[m][n],ufsrc[m][n],ufnrc[m][n])
+        b[m][n] = calcBterm(rho,ufwrc[m][n],uferc[m][n],vfsrc[m][n],vfnrc[m][n], dx, dy)
 
 #Get face interpolated final coeffs for pressure correction equation
 
@@ -179,16 +212,36 @@ aEp = fixCoeffsP(aEp,side="E")
 aSp = fixCoeffsP(aSp,side="S")
 
 #Solve P'
+print "Solving P prime equation using gauss seidel"
 Pprime = gs_obj.gaussSeidel2u(P, aWp, aEp, aNp, aSp, aPp, b , iters)
+print "Done with %d sweeps" %(iters,)
+
+print Ustar
 
 #Step 5 : Set pressure based on value at cell (2,2)
 
 #Set P' level
 Pset = setPress(Pprime)
-print Pset
 
 #Step 6 : Fix face velocities - Pressure straddling
-#Unew =
+from veloCorr import veloCorr
+velcorr_obj = veloCorr()
+uNew = velcorr_obj.velcorrU(Uprc,Pset, aPmod)
+vNew = velcorr_obj.velcorrV(Vprc,Pset,aPmodv)
 
+#Step 7 : Under relax P'
+Pnew = rlxP(P, Pset, alpha )
 
+#Replace U,V and P
+U = uNew
+V = vNew
+P = Pnew
+
+# Plot residuals
+
+from plotResults import plotResults
+plt_obj = plotResults()
+xpt, ypt = plt_obj.genGrid(U)
+
+#plt_obj.plotContours(xpt,ypt*0.1,U,V,P,Pprime,1)
 
