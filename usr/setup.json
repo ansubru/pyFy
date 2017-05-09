@@ -2,6 +2,8 @@
         "domain":[1,1],
         "xNodes":10,
         "yNodes":10,
+        "gridType":"Equidistant",
+        "CRV": 1.0,
         "viscosity":0.001,
         "rho":1.0,
         "boundary-velocity":[1.0,1.0],
@@ -10,9 +12,6 @@
         "C-bound":"walls",
         "D-bound":"walls",
         "Under-relaxation":0.5
-
-
-
 }
 
 

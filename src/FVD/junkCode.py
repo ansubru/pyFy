@@ -300,4 +300,31 @@ def gaussSeidel2v(self, matV, aWinp, aEinp, aNinp, aSinp, aPinp, SUyin , iterinp
 
         return usolve
 
+#Create array with x,y co-ordinates from generated grid
+        i = np.size(grid_x,0)
+        j = np.size(grid_y,1)
+
+        for m in range(0,j):
+            for n in range(0,i):
+                if(m==n==0):
+                    grid_x[m][n] = 0.0
+                    grid_y[m][n] = y
+                elif(m == 0 and n < i):
+                    grid_x[m][n] = (n)*delta_x
+                    grid_y[m][n] = y
+                elif(m > 0 and n > 0):
+                    grid_x[m][n] = (n)*delta_x
+                    grid_y[m][n] = (y - ((m)*delta_y))
+                elif(n == 0 and m == j):
+                    grid_x[m][n] = 0.0
+                    grid_y[m][n] = 0.0
+                elif(n == 0 and m < j):
+                    grid_x[m][n] = 0.0
+                    grid_y[m][n] = (y - ((m)*delta_y))
+                elif(n == i and m == j):
+                    grid_x[m][n] = (n)*delta_x
+                    grid_y[m][n] = 0.0
+                elif(n == i and m == 0):
+                    grid_x[m][n] = (n)*delta_x
+                    grid_y[m][n] = y
 
