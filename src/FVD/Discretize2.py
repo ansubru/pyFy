@@ -36,7 +36,7 @@ class Discretize2(object):
 
 
  ###----------------------------------------------------------------------------RELEVANT FUNCTION DEFINITIONS-----------------------------------------------------------------------------------------------###
-    def FOU_disc2(self, matU, matP, uA, uB, uC, uD):
+    def FOU_disc2(self, matU, uA, uB, uC, uD, matV, vA, vB, vC, vD , matP):
         """A function that returns co-efficients of discretization using first order upwind"""
 
         def underlxaP(ap,coeff):
@@ -51,6 +51,27 @@ class Discretize2(object):
               """
             SUchg = sux + (coeff1*(1-coeff2)*vel)
             return SUchg
+
+        def cloneRowMat(F, G, l, p):
+            """A function to clone pth row from a matrix G to into the lth row of a matrix F (p > l)"""
+            j = np.size(F, 1)
+            for m in range(p):  # loop through rows
+                for n in range(j):  # loop through columns
+                    if (m == p - 1):
+                        F[m][n] = G[l - 1][n]
+            return F
+
+        def cloneColMat(F, G, l, p):
+            """A function to clone lth column into the pth one (p > l)"""
+            Fnew = F
+            j = np.size(Fnew, 0)
+            for m in range(j):  # loop through rows
+                for n in range(p):  # loop through columns
+                    if (n == p - 1):
+                        Fnew[m][n] = G[m][l - 1]
+            return Fnew
+
+
 
 ###############------------CREATE IO OBJECT--------------################
 
@@ -74,10 +95,10 @@ class Discretize2(object):
 ###############------------------------------------------################
 #Initialize all relevant variables:u, v, p etc.
         u = 1.0*matU
+        v = 1.0*matV
         Px = 1.0*matP
         dPx, dPy, Fe, Fw, Fn, Fs =   0.0*matU,  0.0*matU,  0.0*matU, \
                                           0.0*matU,  0.0*matU, 0.0*matU
-        ufe, ufw, ufn, ufs = 0.0*u, 0.0*u, 0.0*u, 0.0*u #interpolated face velocities at each grid node
 
 #Calculate all relevant co-efficients
         aP, aPmod, aW, aWp, aE, aEp, aN, aNp, aS, aSp = 0.0*matU, 0.0*matU, 0.0*matU,  0.0*matU,  0.0*matU,0.0*matU,\
@@ -95,7 +116,7 @@ class Discretize2(object):
                 DyN[m][n] = mu / delYN[m][n]
                 DyS[m][n] = mu / delYS[m][n]
 
-    # Apply bcs
+    # Apply bcs U
         for m in range(0, j):
             for n in range(0, i):
                 if (m >= 0 and n == 0): # A Boundary
@@ -107,7 +128,33 @@ class Discretize2(object):
                 elif (m == i-1  and n != j-1 and n != 0): # D Boundary
                     u[m][n] = uD  # pad bc velocities
 
+    # Apply bcs V
+        for m in range(0, j):
+            for n in range(0, i):
+                if (m >= 0 and n == 0):  # A Boundary
+                    v[m][n] = vA  # pad bc velocities
+                elif (m == 0 and n != j - 1 and n != 0):  # B Boundary
+                    v[m][n] = vB  # pad bc velocities
+                elif (m >= 0 and n == j - 1):  # C Boundary
+                    v[m][n] = vC  # pad bc velocities
+                elif (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
+                    v[m][n] = vD  # pad bc velocities
         A = []
+    #Initialize face velocities
+        ufe, ufw, vfn, vfs = 0.0 * u, 0.0 * u, 0.0 * u, 0.0 * u  # interpolated u face velocities at each grid node
+
+    #Calculate face velocities
+        for m in range(i): #loop through rows
+            for n in range(j): #loop through columns
+                if (m > 0 and n >= 2 ):  # west faces
+                    ufw[m][n] = Interp_obj.lin_interp(u[m][n - 1], u[m][n]) #West face
+                elif (m > 0 and n <= j-3):
+                    ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n + 1]) #East face
+                elif (m >= 2 and n>0):
+                    vfn[m][n] = Interp_obj.lin_interp(v[m][n], v[m - 1][n])  # North face
+                elif (m <= i-3 and n > 0):
+                    vfs[m][n] = Interp_obj.lin_interp(v[m][n], v[m + 1][n]) #South face
+
     # Discretize convection diffusion equation (CD - FOU)
         for m in range(i): #loop through rows
             for n in range(j): #loop through columns
@@ -120,20 +167,16 @@ class Discretize2(object):
                     SUy[m][n] = (0.0+ dPy[m][n])*dx[m][n]
                     SPx[m][n], SPy[m][n] = 0.0, 0.0
 #West faces
-                    ufw[m][n] = Interp_obj.lin_interp(u[m][n-1], u[m][n])
                     Fw[m][n] = rho*ufw[m][n]
                     aW[m][n] = (DxW[m][n] + max(0.0, Fw[m][n]))*dy[m][n]
 #East faces
-                    ufe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n+1])
                     Fe[m][n] = rho*ufe[m][n]
                     aE[m][n] = (DxE[m][n] + max(0.0, -Fe[m][n]))*dy[m][n]
 #South faces
-                    ufs[m][n] = Interp_obj.lin_interp(u[m][n], u[m+1][n])
-                    Fs[m][n] = rho*ufs[m][n]
+                    Fs[m][n] = rho*vfs[m][n]
                     aS[m][n] = (DyS[m][n] + max(0.0, Fs[m][n]))*dx[m][n]
 #North faces
-                    ufn[m][n] = Interp_obj.lin_interp(u[m][n], u[m-1][n])
-                    Fn[m][n] = rho*ufn[m][n]
+                    Fn[m][n] = rho*vfn[m][n]
                     aN[m][n] = (DyN[m][n] + max(0.0, -Fn[m][n]))*dx[m][n]
 #aP term
                     aP[m][n] = (aW[m][n] + aE[m][n] + aN[m][n] + aS[m][n]
@@ -166,22 +209,20 @@ class Discretize2(object):
                     aSp[m][n] = (DyS[m][n] + max(0.0, Fs[m][n]))*dx[m][n]
                     aNp[m][n] = (DyN[m][n] + max(0.0, -Fn[m][n]))*dx[m][n]
 
-                else: #Boundary nodes
-                    ufw[m][n] = u[m][n]; Fw[m][n] = rho*ufw[m][n]
-                    ufe[m][n] = u[m][n]; Fe[m][n] = rho*ufe[m][n]
-                    ufn[m][n] = u[m][n]; Fn[m][n] = rho*ufn[m][n]
-                    ufs[m][n] = u[m][n]; Fs[m][n] = rho*ufs[m][n]
+                else: #Boundary nodes __> These values should not be really used as they dont mean anything!!!
+                    ufw[m][n] = 0.0; Fw[m][n] = rho*ufw[m][n]
+                    ufe[m][n] = 0.0; Fe[m][n] = rho*ufe[m][n]
+                    vfn[m][n] = 0.0; Fn[m][n] = rho*vfn[m][n]
+                    vfs[m][n] = 0.0; Fs[m][n] = rho*vfs[m][n]
 
-
-#B matrix generation
+        #B matrix generation
         Bx = []
         By = []
         for l in range(np.size(matU,0)):
             for m in range(np.size(matU,1)):
                 Bx.append(SUxmod[l][m])
                 By.append(SUymod[l][m])
-
-        return  Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By
+        return  Fe, Fw, Fn, Fs, ufe, ufw, vfn, vfs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By
 
 
 

@@ -107,6 +107,21 @@ U = 0.0*grid
 V = 0.0*grid
 P = 0.0*grid
 
+# Apply bcs
+i = np.size(U,0) #get indices for rows
+j = np.size(U,1) #get indices for columns
+
+for m in range(0, j):
+    for n in range(0, i):
+        if (m >= 0 and n == 0): # A Boundary
+            U[m][n] = UA  # pad bc velocities
+        elif (m == 0 and n != j-1 and n != 0): # B Boundary
+            U[m][n] = UB  # pad bc velocities
+        elif (m >= 0 and n == j-1): # C Boundary
+            U[m][n] = UC  # pad bc velocities
+        elif (m == i-1  and n != j-1 and n != 0): # D Boundary
+            U[m][n] = UD  # pad bc velocities
+
 from Discretize2 import Discretize2
 disc_obj2 = Discretize2()
 
@@ -128,53 +143,32 @@ alpha = 0.5 #Under relaxation
 # --> Implicit under-relaxation due to non-linearity in pde's
 # --> Returns face values of flux and velocities along with A and b matrices
 
-Fe, Fw, Fn, Fs, ufe, ufw, ufn, ufs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By = disc_obj2.FOU_disc2(U,P, UA, UB, UC, UD)
-print Fw[1, :]
-print Fe[1, :]
-print Fn[1, :]
-print Fs[1, :]
+Fe, Fw, Fn, Fs, ufe, ufw, vfn, vfs, aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, A, Bx, By = disc_obj2.FOU_disc2( U, UA, UB, UC, UD, V, VA, VB, VC, VD , P)
 
-
-# i = np.size(U,0) #get indices for rows
-# j = np.size(U,1) #get indices for columns
-#
-#
 # #Step 2 : Solve for U using gauss seidel method
 # # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
-# print "Solving for Ustar using gauss seidel"
+print "Solving for Ustar using gauss seidel"
+Ustar = gs_obj.gaussSeidel3u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
+print "Solving for Vstar using gauss seidel"
+Vstar = gs_obj.gaussSeidel3u(V, aW, aE, aN, aS, aPmod,SUymod, iters)
+print "Done with %d sweeps for U and V" %(iters,)
+
+#Step 3 : Discretize newU using FOU for rhie-chow interpolation using Discretize class obj
+# --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
+# --> Returns face values of flux and velocities along with A and b matrices
+
+from rhieChow2 import rhieChow2
+rc_obj = rhieChow2()
+uferc, vfnrc, pcorre, pcorrn = rc_obj.rcInterp2(Ustar,Vstar,P)
+
+## Get velocities from face to grid nodes
+from interpToGrid import interpToGrid
+intrgrd_obj = interpToGrid()
+Uprc = intrgrd_obj.gridInterpU(ufwrc, uferc)
 #
-# Ustar = gs_obj.gaussSeidel2u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
+
 #
-# print "Done with %d sweeps" %(iters,)
-# #Step 3 : Discretize newU using FOU for rhie-chow interpolation using Discretize class obj
-# # --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
-# # --> Returns face values of flux and velocities along with A and b matrices
-#
-# from rhieChow import rhieChow
-# rc_obj = rhieChow()
-# ufwrc, uferc, ufnrc, ufsrc, pcorrw, pcorre, pcorrn, pcorrs = rc_obj.rcInterp(Ustar,P)
-#
-# # Get velocities from face to grid nodes
-# from interpToGrid import interpToGrid
-# intrgrd_obj = interpToGrid()
-# Uprc = intrgrd_obj.gridInterpU(ufwrc, uferc)
-#
-# #Step 1a : Solve for V using interpolated pressure using Discretize class obj
-# # Discretize U velocity using FOU --> P is checkerboarded (no rhie-chow interpolation)
-# # --> Calculates co-ef aP, aW, aW, aN, aS, and Sources
-# # --> Implicit under-relaxation due to non-linearity in pde's
-# # --> Returns face values of flux and velocities along with A and b matrices
-#
-# Fev, Fwv, Fnv, Fsv, ufev, ufwv, ufnv, ufsv, aWv, aEv, aNv, aSv,aWpv, aEpv, aNpv, aSpv, aPv, aPmodv, SUxmodv, SUymodv, Av, Bxv, Byv = disc_obj.FOU_disc(V,P, VA, VB, VC, VD)
-#
-# i = np.size(V,0) #get indices for rows
-# j = np.size(V,1) #get indices for columns
-#
-#
-# #Step 2 : Solve for V using gauss seidel method
-# # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
-#
-# print "Solving for Vstar using gauss seidel"
+
 #
 # Vstar = gs_obj.gaussSeidel2u(V, aWv, aEv, aNv, aSv, aPmodv,SUymodv, iters)
 #
