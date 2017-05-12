@@ -49,8 +49,6 @@ U = 0.0*grid
 V = 0.0*grid
 P = 0.0*grid
 Pset = 0.0*grid
-Uold = 0.0*grid
-Vold = 0.0*grid
 mdotw, mdote, mdotn, mdots,  = 0.0*grid, 0.0*grid, 0.0*grid, 0.0*grid,
 
 # Apply bcs to U an V
@@ -123,9 +121,10 @@ outerIters = 0
     # --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
     # --> Implicit under-relaxation due to non-linearity in pde's
     # --> Returns face values of flux and velocities along with A and b matrices
-while (outerIters < 2):
+while (outerIters < 1):
     outerIters += 1
     aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2( U,  V, mdotw, mdote, mdotn, mdots , P)
+
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
     print "Solving for Ustar using gauss seidel"
@@ -181,7 +180,6 @@ while (outerIters < 2):
 
     uNew, vNew = corr_obj.velcorr(Ustar,Vstar,Pset, aPmod) # --> Correct u and v velcoities
 
-
     # #Step 7 : Under relax P'
     Pnew = solFunc_obj.rlxP(P, Pset, alpha)
 
@@ -191,6 +189,7 @@ while (outerIters < 2):
     mdotw = mdotwNew; mdote = mdoteNew; mdotn = mdotnNew; mdots = mdotsNew
     P = Pnew
 
+print U
 # #Plot residuals
 # from plotResults import plotResults
 # plt_obj = plotResults()
