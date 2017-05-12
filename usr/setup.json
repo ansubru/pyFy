@@ -11,7 +11,7 @@
         "B-bound":"fixed velocity",
         "C-bound":"walls",
         "D-bound":"walls",
-        "Under-relaxation":0.5
+        "Under-relaxation":0.1
 }
 
 

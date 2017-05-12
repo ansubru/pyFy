@@ -28,73 +28,19 @@ class gaussSiedel2(object):
     def __init__(self):
         """Return object"""
 
-    def gaussSeidel2u(self, matU, aW, aE, aN, aS, aP, SUx, iterinp):
+    def gaussSeidel3u(self, u, aW, aE, aN, aS, aP, SUx, iterinp):
         """Solves gauss seidel for a fixed number of iterations."""
-        print("Trying to solve U velocities ...")
 
         ###############------------CREATE IO OBJECT--------------################
         from IO import IO
         IO_obj = IO("random")
-        #Boundary conditions
-        UA = IO_obj.UA
-        UB = IO_obj.UB
-        UC = IO_obj.UC
-        UD = IO_obj.UD
 
         #Initialize all relevant variables:u, v, p etc.
-        u = 1.0*matU
-        i = np.size(matU, 0)
-        j = np.size(matU, 1)
+        i = np.size(u, 0)
+        j = np.size(u, 1)
 
         iter = 0 # Mock up error parameter only to run the While
-
-        while iter < iterinp:
-            for m in range(i):  # loop through rows
-                for n in range(j):  # loop through columns
-                    if m == 0:  # cells in the top left edge
-                        uN=0
-                    else:
-                        uN=u[m-1][n]
-                    if m==i-1:
-                        uS=0
-                    else:
-                        uS=u[m+1][n]
-                    if n ==0:
-                        uW=0
-                    else:
-                        uW=u[m][n-1]
-                    if n==j-1:
-                        uE=0
-                    else:
-                        uE=u[m][n+1]
-
-                    u[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
-                                       uN*aN[m][n]+SUx[m][n])/aP[m][n]
-
-
-            iter += 1
-
-        return u
-
-    def gaussSeidel3u(self, matU, aW, aE, aN, aS, aP, SUx, iterinp):
-        """Solves gauss seidel for a fixed number of iterations."""
-        print("Trying to solve U velocities ...")
-
-        ###############------------CREATE IO OBJECT--------------################
-        from IO import IO
-        IO_obj = IO("random")
-        #Boundary conditions
-        UA = IO_obj.UA
-        UB = IO_obj.UB
-        UC = IO_obj.UC
-        UD = IO_obj.UD
-
-        #Initialize all relevant variables:u, v, p etc.
-        u = 1.0*matU
-        i = np.size(matU, 0)
-        j = np.size(matU, 1)
-
-        iter = 0 # Mock up error parameter only to run the While
+        utemp = 0.0*u
 
         while iter < iterinp:
             for m in range(i):  # loop through rows
@@ -106,11 +52,9 @@ class gaussSiedel2(object):
                         uE = u[m][n + 1]
                         uW = u[m][n - 1]
 
-                        u[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
+                        utemp[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
                                            uN*aN[m][n]+SUx[m][n])/aP[m][n]
 
-
             iter += 1
-        print uN
-        return u
+        return utemp
 

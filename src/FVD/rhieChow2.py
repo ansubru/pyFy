@@ -38,8 +38,8 @@ class rhieChow2(object):
 
 
  ###----------------------------------------------------------------------------RELEVANT FUNCTION DEFINITIONS-----------------------------------------------------------------------------------------------###
-    def rcInterp2(self, matU, matV, matP):
-        """A function that returns corrected face velocities and fluxes"""
+    def rcInterp2(self, matU, matV, mdotw, mdote, mdotn, mdots, matP):
+        """A function that provides necessary corrections for face mass fluxes"""
 
         def rhicE(PEE, PE, PP, PW):
             coeff1e = (PEE - 3.0 * PE + 3.0 * PP - PW)
@@ -60,24 +60,14 @@ class rhieChow2(object):
         IO_obj = IO("random")
         NU = IO_obj.nu  # viscosity nu (constant viscosity model)
         rho = IO_obj.rho  # Density in Kg/m3
-        mu = NU * rho  # constant for all nodes
         dx = IO_obj.dx  # x-grid spacing
         dy = IO_obj.dy  # y-grid spacing
 
-        # Boundary conditions
-        UA = IO_obj.UA
-        UB = IO_obj.UB
-        UC = IO_obj.UC
-        UD = IO_obj.UD
-        VA = IO_obj.VA
-        VB = IO_obj.VB
-        VC = IO_obj.VC
-        VD = IO_obj.VD
-
-        #obtain face velocities using the Discretize class obj
-        from Discretize import Discretize
-        disc_obj = Discretize()
-        Fe, Fw, Fn, Fs, ufe, ufw, vfn, vfs, aW, aE, aN, aS, aWp, aEp, aNp, aSp, anotmodP, aP, SUxmod, SUymod, A, Bx, By = disc_obj.FOU_discdisc_obj2.FOU_disc2( v, UA, UB, UC, UD, v, VA, VB, VC, VD , Px)
+        # NOTE : RHIE CHOW uses aPmod interpolated to the faces
+        # Obtain face interpolated coeffs
+        from Discretize2 import Discretize2
+        disc_obj2 = Discretize2()
+        aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2(u, v, mdotw, mdote, mdotn, mdots, Px)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)
@@ -87,8 +77,7 @@ class rhieChow2(object):
         for m in range(i): #loop through rows
             for n in range(j): #loop through columns
 
-                if (m >= 1 or m <= i-3 and n >= 1 or n <= j-3):  # Internal nodes (except boundary + first grid nodes)
-
+                if (m > 1 and m <= i-3 and n > 1 and n <= j-3):  # Internal nodes (except boundary + first grid nodes)
                     PP = Px[m][n]
                     PW = Px[m][n - 1]
                     PE = Px[m][n+1]
@@ -99,41 +88,37 @@ class rhieChow2(object):
 
 #East faces
                     coeff1e = rhicE(PEE, PE, PP, PW)
-                    coeff2e = dy/(dx*4.0*aP[m][n])
+                    coeff2e = (dy[m][n]**2)*rho/(dx[m][n]*4.0*aEe[m][n])
                     pcorre[m][n] = coeff1e/coeff2e
-                    ufe[m][n] = ufe[m][n] + pcorre[m][n]
 
 #North faces
                     coeff1n = rhicN(PNN, PN, PP, PS)   # Pn = Pp (zero gradient bc)
-                    coeff2n = dx/(dy*4.0*aP[m][n])
+                    coeff2n = (dx[m][n]**2)*rho/(dy[m][n]*4.0*aNn[m][n])
                     pcorrn[m][n] = coeff1n/coeff2n
-                    vfs[m][n] = vfs[m][n] + pcorrn[m][n]
 
-                elif(m > 0 and n == j-2): # Boundary face (EAST)
+                if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
                     PP = Px[m][n]
                     PW = Px[m][n - 1]
                     PE = Px[m][n + 1]
-                    PEE = Px[m][n + 1]
+                    PEE = Px[m][n + 2]
 
                     # East faces
                     coeff1e = rhicE(PEE, PE, PP, PW)
-                    coeff2e = dy / (dx * 4.0 * aP[m][n])
+                    coeff2e = (dy[m][n] ** 2) * rho / (4.0 * aEe[m][n])
                     pcorre[m][n] = coeff1e / coeff2e
-                    ufe[m][n] = ufe[m][n] + pcorre[m][n]
 
-                elif (m == 1 and n > 0):  # Boundary face (North)
+                if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
                     PP = Px[m][n]
                     PN = Px[m - 1][n]
-                    PNN = Px[m - 1][n]
+                    PNN = Px[m - 2][n]
                     PS = Px[m + 1][n]
 
                     # North faces
                     coeff1n = rhicN(PNN, PN, PP, PS)  # Pn = Pp (zero gradient bc)
-                    coeff2n = dx / (dy * 4.0 * aP[m][n])
+                    coeff2n = (dx[m][n] ** 2) * rho / (4.0 * aNn[m][n])
                     pcorrn[m][n] = coeff1n / coeff2n
-                    vfs[m][n] = vfs[m][n] + pcorrn[m][n]
 
-        return ufe, vfn, pcorre, pcorrn
+        return pcorre, pcorrn
 
 
 

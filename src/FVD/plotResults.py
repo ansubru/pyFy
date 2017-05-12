@@ -37,12 +37,16 @@ class plotResults(object):
         y=[]
         Uplot=[]
         Vplot=[]
-        for j in range(np.shape(X)[0]):
-            for i in range(np.shape(X)[1]):
-                if X[j,i]>0.45 and X[j,i]<0.55 and Y[j,i]<0.99:
-                    y.append(Y[j,i])
-                    Uplot.append(U[j,i])
-                    Vplot.append(V[j,i])
+        for j in range(np.shape(X)[0]-1):
+            for i in range(np.shape(X)[1]-1):
+                if X[i,j]>0.45 and X[i,j]<0.55 and Y[i,j]<0.99:
+                    y.append(Y[i,j])
+                    Uplot.append(U[i,j])
+                    Vplot.append(V[i,j])
+
+        U = np.transpose(U)
+        V = np.transpose(V)
+
 
         LarsData = np.loadtxt('LarsData.txt', skiprows=1)
 
@@ -81,42 +85,7 @@ class plotResults(object):
 
         from IO import IO
         IO_obj = IO("random")
-        x = IO_obj.x #generate a base grid node layout
-        y = IO_obj.y #generate a base grid node layout
-        delta_x = IO_obj.delta_x
-        delta_y = IO_obj.delta_y
-
-        u = 0.0*matU
-
-        #Create array with x,y co-ordinates from generated grid
-        i = np.size(u,0)
-        j = np.size(u,1)
-
-        grid_x, grid_y = 0.0*u, 0.0*u
-
-        for m in range(0,j):
-            for n in range(0,i):
-                if(m==n==0):
-                    grid_x[m][n] = 0.0
-                    grid_y[m][n] = y
-                elif(m == 0 and n < i):
-                    grid_x[m][n] = (n)*delta_x
-                    grid_y[m][n] = y
-                elif(m > 0 and n > 0):
-                    grid_x[m][n] = (n)*delta_x
-                    grid_y[m][n] = (y - ((m)*delta_y))
-                elif(n == 0 and m == j):
-                    grid_x[m][n] = 0.0
-                    grid_y[m][n] = 0.0
-                elif(n == 0 and m < j):
-                    grid_x[m][n] = 0.0
-                    grid_y[m][n] = (y - ((m)*delta_y))
-                elif(n == i and m == j):
-                    grid_x[m][n] = (n)*delta_x
-                    grid_y[m][n] = 0.0
-                elif(n == i and m == 0):
-                    grid_x[m][n] = (n)*delta_x
-                    grid_y[m][n] = y
-
+        grid_x = IO_obj.grid_x
+        grid_y = IO_obj.grid_y
         return grid_x, grid_y
 

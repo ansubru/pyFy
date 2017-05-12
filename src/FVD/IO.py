@@ -48,8 +48,8 @@ class IO(object):
         dataStorage = json.load(json_data)
         data = dataStorage
 #Data extraction
-        x = 1.0*data["xNodes"]
-        y = 1.0*data["yNodes"]
+        x = data["xNodes"]
+        y = data["yNodes"]
         domainSize = data["domain"]
         Ubc = data["boundary-velocity"] #Boundary velocity at I/P
         nu = 1.0*data["viscosity"]
@@ -69,6 +69,8 @@ class IO(object):
         delYN = np.array(grid_gen(x, y))
         delYS = np.array(grid_gen(x, y))
         grid_nodes = grid_gen(x, y)
+        grid_x = grid_gen(x, y)
+        grid_y = grid_gen(x, y)
 
 
         # Create delX and delY grids
@@ -77,14 +79,14 @@ class IO(object):
 
         if data["gridType"] in ['Equidistant', 'equidistant']:
 
-            for m in range(0, j):
-                for n in range(0, i):
+            for m in range(0, i):
+                for n in range(0, j):
 
                     dx[m][n] = (domainSize[0]*1.0)/x  #cell size (x-direction)
                     dy[m][n] = (domainSize[1]*1.0)/y  #cell size (y-direction)
 
-            for m in range(0, j):
-                for n in range(0, i):
+            for m in range(0, i):
+                for n in range(0, j):
 
                     # Apply bcs
 
@@ -110,8 +112,9 @@ class IO(object):
                         delXW[m][n] = dx[m][n]
                         delXE[m][n] = dx[m][n]
 
-            delYN = np.transpose(delXE) # distance to North neighbour
-            delYS = np.transpose(delXW) # distance to South neighbour
+            delYS = np.transpose(delXE) # distance to North neighbour
+            delYN = np.transpose(delXW) # distance to South neighbour
+
 
         #elif data["gridType"] in ['Non-Equidistant', 'non-equidistant']:
 
@@ -143,6 +146,30 @@ class IO(object):
         elif data["D-bound"] in ['fixed velocity']:
             UD = Ubcx
             VD = Ubcy
+
+        # Create array with x,y co-ordinates from generated grid
+        i = np.size(grid_nodes, 0)
+        j = np.size(grid_nodes, 1)
+
+        for m in range(0, i):
+            for n in range(0, j):
+                if(m > 0 and n == 1):
+                    grid_x[m][n] = (n)*dy[m][n]*0.5
+                if(m > 0 and n == j-2):
+                    grid_x[m][n] = ((j-2)*dy[5][5]) - (dy[m][n] * 0.5)
+                if (m > 0 and n == j - 1):
+                    grid_x[m][n] = ((j - 2) * dy[m][n])
+                if (m == 1 and n > 0):
+                    grid_y[m][n] = (m) * dx[m][n] * 0.5
+                if (m == i-2 and n > 0):
+                    grid_y[m][n] = ((i-2) * dx[5][5]) - (dx[m][n] * 0.5)
+                if (m == i-1 and n > 0):
+                    grid_y[m][n] = ((i-2) * dx[5][5])
+                if( m > 0 and n>1 and n < j-2):
+                    grid_x[m][n] = n * dy[m][n]
+                if (n > 0  and m > 1 and m < i - 2):
+                    grid_y[m][n] = m * dx[m][n]
+
 
 
 

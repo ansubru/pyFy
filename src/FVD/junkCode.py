@@ -328,3 +328,79 @@ def gaussSeidel2v(self, matV, aWinp, aEinp, aNinp, aSinp, aPinp, SUyin , iterinp
                     grid_x[m][n] = (n)*delta_x
                     grid_y[m][n] = y
 
+
+def fixCoeffsP (coeff,side):
+    i = np.size(coeff, 0)
+    j = np.size(coeff, 1)
+
+    if side in 'W':
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  != (i-1) and n == 0 :
+                    coeff[m][n] = 0.0
+
+                if m  == (i-1) and n == 0 :
+                    coeff[m][n] = 0.0
+
+    if side in 'E':
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  != (i-1) and n == j-1 :
+                    coeff[m][n] = 0.0
+
+                if m  == (i-1) and n == j-1 :
+                    coeff[m][n] = 0.0
+
+    if side in 'S':
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                if m  == (i-1) and n != j-1 :
+                    coeff[m][n] = 0.0
+
+                if m  == (i-1) and n == j-1 :
+                    coeff[m][n] = 0.0
+    return coeff
+
+
+def cloneRowMat(F, G, l, p):
+    """A function to clone pth row from a matrix G to into the lth row of a matrix F (p > l)"""
+    j = np.size(F, 1)
+    for m in range(p):  # loop through rows
+        for n in range(j):  # loop through columns
+            if (m == p - 1):
+                F[m][n] = G[l - 1][n]
+    return F
+
+
+def cloneColMat(F, G, l, p):
+    """A function to clone lth column into the pth one (p > l)"""
+    Fnew = F
+    j = np.size(Fnew, 0)
+    for m in range(j):  # loop through rows
+        for n in range(p):  # loop through columns
+            if (n == p - 1):
+                Fnew[m][n] = G[m][l - 1]
+    return Fnew
+
+
+if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
+    PP = Px[m][n]
+    PW = Px[m][n - 1]
+    PE = Px[m][n + 1]
+    PEE = Px[m][n + 1]
+
+    # East faces
+    coeff1e = rhicE(PEE, PE, PP, PW)
+    coeff2e = (dy[m][n] ** 2) * rho / (4.0 * aEe[m][n])
+    pcorre[m][n] = coeff1e / coeff2e
+
+if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
+    PP = Px[m][n]
+    PN = Px[m - 1][n]
+    PNN = Px[m - 1][n]
+    PS = Px[m + 1][n]
+
+    # North faces
+    coeff1n = rhicN(PNN, PN, PP, PS)  # Pn = Pp (zero gradient bc)
+    coeff2n = (dx[m][n] ** 2) * rho / (4.0 * aNn[m][n])
+    pcorrn[m][n] = coeff1n / coeff2n
