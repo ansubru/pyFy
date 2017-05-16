@@ -80,19 +80,16 @@ from solFunc import solFunc
 solFunc_obj = solFunc()
 
 
-def gaussSeidel3u(u, aW, aE, aN, aS, aP, SUx, iterinp):
+def gaussSeidel3u(U, aW, aE, aN, aS, aP, SUx, iterinp):
     """Solves gauss seidel for a fixed number of iterations."""
 
-    ###############------------CREATE IO OBJECT--------------################
-    from IO import IO
-    IO_obj = IO("random")
+    u = 1.0*U
 
     # Initialize all relevant variables:u, v, p etc.
     i = np.size(u, 0)
     j = np.size(u, 1)
 
     iter = 0  # Mock up error parameter only to run the While
-
     while iter < iterinp:
         for m in range(i):  # loop through rows
             for n in range(j):  # loop through columns
@@ -123,19 +120,21 @@ outerIters = 0
     # --> Returns face values of flux and velocities along with A and b matrices
 while (outerIters < 1):
     outerIters += 1
+    print "Solving iteration %i"%(outerIters)
     aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2( U,  V, mdotw, mdote, mdotn, mdots , P)
 
     # #Step 1a : Solve for U using gauss seidel method
-    # # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
-    print "Solving for Ustar using gauss seidel"
+    # # --> Returns U* (newU) which will be corrected using rhie-chow interpolatio
     Ustar = gaussSeidel3u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
+    print Ustar
     # #Step 1b : Solve for V using gauss seidel method
     # # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
 
-    print "Solving for Vstar using gauss seidel"
     Vstar = gaussSeidel3u(V, aW, aE, aN, aS, aPmod,SUymod, iters)
-    print "Done with %d sweeps for U and V" %(iters,)
 
+    # print ("APMOD AT %i iteration" %(outerIters))
+    # print Ustar
+    # print ("APMOD AT %i iteration" %(outerIters))
     #Step 2 : RHIE-CHOW INTERPOLATION
     # --> correct face velocities (EAST AND NORTH FACES ALONE)
 
@@ -144,9 +143,10 @@ while (outerIters < 1):
     pcorre, pcorrn = rc_obj.rcInterp2(U,  V, mdotw, mdote, mdotn, mdots , P)
 
     # Step 2a : Correct face fluxes with rhie chow
-    mstarw, mstare, mstarn, mstars =  solFunc_obj.calcFaceMassFlux(Ustar,Vstar) # --> Get east and north face mass fluxes for Ustar and Vstar
+    mstare, mstarn =  solFunc_obj.calcFaceMassFlux(Ustar,Vstar) # --> Get east and north face mass fluxes for Ustar and Vstar
     mdote,mdotn = solFunc_obj.correctFaceMassFlux(mstare,mstarn,pcorre,pcorrn) # --> Correct with rhie-chow to get corrected mdote and motn
     mdotw, mdots = solFunc_obj.getFaceMassFluxWS(mdote,mdotn) #--> Get corrected mdotw and mdots
+
 
     #Step 3 : Solve P' equation using U velocities
     # --> Calculates co-eff aP, aW, aW, aN, aS, at faces
@@ -159,9 +159,7 @@ while (outerIters < 1):
 
     #Step 3b #Solve P' using co-eff for Pprime equation
 
-    print "Solving P prime equation using gauss seidel"
-    Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, iters)
-    print "Done with %d sweeps" %(iters,)
+    Pprime = gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, iters)
 
     #Step 4 : Set pressure based on value at cell (2,2)
     #Set P' level
@@ -170,6 +168,8 @@ while (outerIters < 1):
 
     #COPY Pset TO BOUNDARY
     Pset = solFunc_obj.setPsetbcs(Pset)
+
+
 
     # #Step 5 : Pressure straddling
     from Corr2 import Corr2
@@ -189,8 +189,7 @@ while (outerIters < 1):
     mdotw = mdotwNew; mdote = mdoteNew; mdotn = mdotnNew; mdots = mdotsNew
     P = Pnew
 
-print U
-# #Plot residuals
+# # #Plot residuals
 # from plotResults import plotResults
 # plt_obj = plotResults()
 # xpt, ypt = plt_obj.genGrid(U)

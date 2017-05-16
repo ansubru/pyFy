@@ -89,29 +89,22 @@ class solFunc(object):
         Interp_obj = Interpolate()
         i = np.size(u, 0)
         j = np.size(u, 1)
-        mfe,mfw, mfn, mfs = 0.0 * u, 0.0 * u, 0.0 * u, 0.0 * u
+        mfe, mfn = 0.0 * u, 0.0 * u
+
         for m in range(i):  # loop through rows
             for n in range(j):  # loop through columns
 
                 if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
-                    mfw[m][n] = Interp_obj.lin_interp(u[m][n - 1], u[m][n]) * dy[m][n] * rho  # West face
                     mfe[m][n] = Interp_obj.lin_interp(u[m][n], u[m][n + 1]) * dy[m][n] * rho  # East face
                     mfn[m][n] = Interp_obj.lin_interp(v[m][n], v[m - 1][n]) * dx[m][n] * rho  # North face
-                    mfs[m][n] = Interp_obj.lin_interp(v[m][n], v[m + 1][n]) * dx[m][n] * rho  # South face
 
                 if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
                     mfe[m][n] = 0.0  # East face
 
-                if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
-                    mfw[m][n] = 0.0  # West face
 
                 if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
                     mfn[m][n] = 0.0   # North face
-
-                if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
-                    mfs[m][n] = 0.0  # South face
-
-        return mfw, mfe, mfn, mfs
+        return  mfe, mfn
 
     def correctFaceMassFlux(self, mfe, mfn, pcorre, pcorrn):
         """A function to correct face velocities"""

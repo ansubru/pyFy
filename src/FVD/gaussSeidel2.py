@@ -52,9 +52,9 @@ class gaussSiedel2(object):
                         uE = u[m][n + 1]
                         uW = u[m][n - 1]
 
-                        utemp[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
+                        u[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
                                            uN*aN[m][n]+SUx[m][n])/aP[m][n]
 
             iter += 1
-        return utemp
+        return u
 

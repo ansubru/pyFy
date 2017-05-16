@@ -73,50 +73,33 @@ class rhieChow2(object):
         j = np.size(matU, 1)
 
         pcorre, pcorrn, = 0.0 * matU, 0.0 * matU
+        coeff1eMat = 0.0 * matU
+        coeff1nMat = 0.0 * matU
 
         for m in range(i): #loop through rows
             for n in range(j): #loop through columns
 
-                if (m > 1 and m <= i-3 and n > 1 and n <= j-3):  # Internal nodes (except boundary + first grid nodes)
+                if (m >= 1 and m < i-2 and n > 0 and n < j-2):  #East faces
                     PP = Px[m][n]
                     PW = Px[m][n - 1]
                     PE = Px[m][n+1]
                     PEE = Px[m][n+2]
+
+                    coeff1e = (PEE - 3.0 * PE + 3.0 * PP - PW)
+                    coeff1eMat[m][n] = coeff1e
+                    coeff2e = (rho*dy[m][n]*dy[m][n])/(4.0*aEe[m][n])
+                    pcorre[m][n] = coeff1e/coeff2e
+
+                if (m > 1 and m <= i-2 and n > 0 and n <= j-2):  #North faces
+                    PP = Px[m][n]
                     PN = Px[m-1][n]
                     PNN = Px[m-2][n]
                     PS = Px[m + 1][n]
 
-#East faces
-                    coeff1e = rhicE(PEE, PE, PP, PW)
-                    coeff2e = (dy[m][n]**2)*rho/(dx[m][n]*4.0*aEe[m][n])
-                    pcorre[m][n] = coeff1e/coeff2e
-
-#North faces
-                    coeff1n = rhicN(PNN, PN, PP, PS)   # Pn = Pp (zero gradient bc)
-                    coeff2n = (dx[m][n]**2)*rho/(dy[m][n]*4.0*aNn[m][n])
+                    coeff1n = (PNN - 3.0 * PN + 3.0 * PP - PS)   # Pn = Pp (zero gradient bc)
+                    coeff1nMat[m][n] = coeff1n
+                    coeff2n = (rho*dx[m][n]**2)/(4.0*aNn[m][n])
                     pcorrn[m][n] = coeff1n/coeff2n
-
-                if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
-                    PP = Px[m][n]
-                    PW = Px[m][n - 1]
-                    PE = Px[m][n + 1]
-                    PEE = Px[m][n + 2]
-
-                    # East faces
-                    coeff1e = rhicE(PEE, PE, PP, PW)
-                    coeff2e = (dy[m][n] ** 2) * rho / (4.0 * aEe[m][n])
-                    pcorre[m][n] = coeff1e / coeff2e
-
-                if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
-                    PP = Px[m][n]
-                    PN = Px[m - 1][n]
-                    PNN = Px[m - 2][n]
-                    PS = Px[m + 1][n]
-
-                    # North faces
-                    coeff1n = rhicN(PNN, PN, PP, PS)  # Pn = Pp (zero gradient bc)
-                    coeff2n = (dx[m][n] ** 2) * rho / (4.0 * aNn[m][n])
-                    pcorrn[m][n] = coeff1n / coeff2n
 
         return pcorre, pcorrn
 

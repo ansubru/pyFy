@@ -39,13 +39,10 @@ class plotResults(object):
         Vplot=[]
         for j in range(np.shape(X)[0]-1):
             for i in range(np.shape(X)[1]-1):
-                if X[i,j]>0.45 and X[i,j]<0.55 and Y[i,j]<0.99:
-                    y.append(Y[i,j])
-                    Uplot.append(U[i,j])
-                    Vplot.append(V[i,j])
-
-        U = np.transpose(U)
-        V = np.transpose(V)
+                if X[j,i]>0.45 and X[j,i]<0.55 and Y[j,i]<0.99:
+                    y.append(Y[j,i])
+                    Uplot.append(U[j,i])
+                    Vplot.append(V[j,i])
 
 
         LarsData = np.loadtxt('LarsData.txt', skiprows=1)
