@@ -126,7 +126,7 @@ while (outerIters < 1):
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolatio
     Ustar = gaussSeidel3u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
-    print Ustar
+
     # #Step 1b : Solve for V using gauss seidel method
     # # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
 
