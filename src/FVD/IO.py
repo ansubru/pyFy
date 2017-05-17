@@ -130,7 +130,6 @@ class IO(object):
 
         elif data["gridType"] in ['Non-Equidistant', 'non-equidistant']:
 
-            sum = 0
             for m in range(0, i):
                 for n in range(0, j):
 
@@ -139,30 +138,25 @@ class IO(object):
                     ax = (0.5*domainSize[0]) / ((1 - growthRatio ** nx) / (1 - growthRatio))
                     ay = (0.5 *domainSize[1]) / ((1 - growthRatio ** ny) / (1 - growthRatio))
 
-                    if m > 0 and n < j/2:
+                    if m >= 0 and n < j/2:
                         xpt[m][n] = ax * ((1 - growthRatio ** n) / (1 - growthRatio))
 
-                    elif m > 0 and n >= j/2:
+                    if m >= 0 and n >= j/2:
                         mirrX = j / 2 - (n - j / 2) - 1
-                        xpt[m][n] = xpt[m][mirrX]
+                        xpt[m][n] = 1 - xpt[m][mirrX]
+                    if m == n == 0 :
+                        xpt[m][n] = 0.0
+
+            ypt = np.transpose(xpt)
+            ypt = 1 - ypt
 
             for m in range(0, i):
                 for n in range(0, j):
-                    if (m > 1 and m <= i - 3 and n > 1 and n <= j - 3):
+                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
                         dx[m][n] = xpt[m][n+1] - xpt[m][n]
-
-                    # if m < i/2 and n > 0:
-                    #     ypt[m][n] = ax * ((1 - growthRatio ** n) / (1 - growthRatio))
-                    # elif m >= i / 2 and n >0:
-                    #     mirrY = i / 2 - (m - i / 2) - 1
-                    #     ypt[m][n] = ypt[mirrY][n]
-
-                    # dy[m][n] = ay*((1 - growthRatio ** m) / (1 - growthRatio))
-
-        pprint(xpt[1])
-        pprint(dx[2])
-
-
+                        dy[m][n] = ypt[m+1][n] - xpt[m][n]
+            print dx[1]
+            print xpt[1]
 
 #Boundary conditions
         if data["A-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
