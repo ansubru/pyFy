@@ -28,7 +28,7 @@ class gaussSiedel2(object):
     def __init__(self):
         """Return object"""
 
-    def gaussSeidel3u(self, u, aW, aE, aN, aS, aP, SUx, iterinp):
+    def gaussSeidel3u(self, u, aW, aE, aN, aS, aP, SUx, iters):
         """Solves gauss seidel for a fixed number of iterations."""
 
         ###############------------CREATE IO OBJECT--------------################
@@ -40,9 +40,11 @@ class gaussSiedel2(object):
         j = np.size(u, 1)
 
         iter = 0 # Mock up error parameter only to run the While
-        utemp = 0.0*u
+        residual = 1
+        sumRes = 0.0
 
-        while iter < iterinp:
+        while iters > iter:
+
             for m in range(i):  # loop through rows
                 for n in range(j):  # loop through columns
                     if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  #Internal nodes:
@@ -54,7 +56,11 @@ class gaussSiedel2(object):
 
                         u[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
                                            uN*aN[m][n]+SUx[m][n])/aP[m][n]
-
+                        sumRes = sumRes + (uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
+                                           uN*aN[m][n]+SUx[m][n]) - u[m][n]*aP[m][n]
             iter += 1
+            residual = abs(sumRes)
+
+        print "Solved G-S with %i iterations"%(iter)
         return u
 

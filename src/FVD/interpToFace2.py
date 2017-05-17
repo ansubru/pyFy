@@ -103,4 +103,5 @@ class interpToFace2(object):
                     z += 1
                     aPs[m][n] = 0.0 # Naumann bc at all boundaries
                     aPn[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m - 1][n])
+
         return aPw, aPe, aPs, aPn

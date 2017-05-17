@@ -88,7 +88,7 @@ class rhieChow2(object):
                     coeff1e = (PEE - 3.0 * PE + 3.0 * PP - PW)
                     coeff1eMat[m][n] = coeff1e
                     coeff2e = (rho*dy[m][n]*dy[m][n])/(4.0*aEe[m][n])
-                    pcorre[m][n] = coeff1e/coeff2e
+                    pcorre[m][n] = coeff1e*coeff2e
 
                 if (m > 1 and m <= i-2 and n > 0 and n <= j-2):  #North faces
                     PP = Px[m][n]
@@ -99,7 +99,7 @@ class rhieChow2(object):
                     coeff1n = (PNN - 3.0 * PN + 3.0 * PP - PS)   # Pn = Pp (zero gradient bc)
                     coeff1nMat[m][n] = coeff1n
                     coeff2n = (rho*dx[m][n]**2)/(4.0*aNn[m][n])
-                    pcorrn[m][n] = coeff1n/coeff2n
+                    pcorrn[m][n] = coeff1n*coeff2n
 
         return pcorre, pcorrn
 

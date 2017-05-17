@@ -132,15 +132,15 @@ class Discretize2(object):
                 if (m >= 0 and n == 0): # A Boundary
                     u[m][n] = uA  # pad bc velocities
                     v[m][n] = vA  # pad bc velocities
-                elif (m == 0 and n != j-1 and n != 0): # B Boundary
-                    u[m][n] = uB  # pad bc velocities
-                    v[m][n] = vB  # pad bc velocities
-                elif (m >= 0 and n == j-1): # C Boundary
+                if (m >= 0 and n == j-1): # C Boundary
                     u[m][n] = uC  # pad bc velocities
                     v[m][n] = vC  # pad bc velocities
-                elif (m == i-1  and n != j-1 and n != 0): # D Boundary
+                if (m == i-1  and n != j-1 and n != 0): # D Boundary
                     u[m][n] = uD  # pad bc velocities
                     v[m][n] = vD  # pad bc velocities
+                if (m == 0 and n != j-1 and n != 0): # B Boundary
+                    u[m][n] = uB  # pad bc velocities
+                    v[m][n] = vB  # pad bc velocities
 
         A = []
     #Initialize face velocities

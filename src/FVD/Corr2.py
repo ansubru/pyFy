@@ -84,15 +84,15 @@ class Corr2(object):
                 if (m >= 0 and n == 0):  # A Boundary
                     uPfinal[m][n] = uA  # pad bc velocities
                     vPfinal[m][n] = vA  # pad bc velocities
-                elif (m == 0 and n != j - 1 and n != 0):  # B Boundary
-                    uPfinal[m][n] = uB  # pad bc velocities
-                    vPfinal[m][n] = vB  # pad bc velocities
-                elif (m >= 0 and n == j - 1):  # C Boundary
+                if (m >= 0 and n == j - 1):  # C Boundary
                     uPfinal[m][n] = uC  # pad bc velocities
                     vPfinal[m][n] = vC  # pad bc velocities
-                elif (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
+                if (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
                     uPfinal[m][n] = uD  # pad bc velocities
                     vPfinal[m][n] = vD  # pad bc velocities
+                if (m == 0 and n != j - 1 and n != 0):  # B Boundary
+                    uPfinal[m][n] = uB  # pad bc velocities
+                    vPfinal[m][n] = vB  # pad bc velocities
 
         return uPfinal, vPfinal
 

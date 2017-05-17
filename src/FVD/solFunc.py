@@ -38,7 +38,24 @@ class solFunc(object):
 
  ###----------------------------------------------------------------------------RELEVANT FUNCTION DEFINITIONS-----------------------------------------------------------------------------------------------###
 
+    def applyBCs(self,U,UA,UB,UC,UD):
+        """A function to Apply BC's"""
+        i = np.size(U, 0)
+        j = np.size(U, 1)
+        u = 0.0*U
 
+        # Apply bcs U and V
+        for m in range(0, j):
+            for n in range(0, i):
+                if (m >= 0 and n == 0):  # A Boundary
+                    u[m][n] = UA  # pad bc velocities
+                if (m >= 0 and n == j - 1):  # C Boundary
+                    u[m][n] = UC  # pad bc velocities
+                if (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
+                    u[m][n] = UD  # pad bc velocities
+                if (m == 0 and n != j - 1 and n != 0):  # B Boundary
+                    u[m][n] = UB  # pad bc velocities
+        return u
 
     def setPress(self,P,x,y):
         """A function to set a fixed pressure at a grid point x,y"""

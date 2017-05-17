@@ -15,6 +15,7 @@ import os
 import numpy as np
 import re
 import json
+from pprint import pprint
 
 ##############################################################################################################################################################################################################
 ###----------------------------------------------------------------------------CLASS DEFINITION-----------------------------------------------------------------------------------------------###
@@ -42,6 +43,15 @@ class IO(object):
         grid = np.zeros(shape=(a,b))
         return grid
 
+    def cloneRowMat(F, G, l, p):
+        """A function to clone pth row from a matrix G to into the lth row of a matrix F (p > l)"""
+        j = np.size(F, 1)
+        for m in range(p):  # loop through rows
+            for n in range(j):  # loop through columns
+                if (m == p - 1):
+                    F[m][n] = G[l - 1][n]
+        return F
+
 #Open pyFy/usr/setup.txt
     dataStorage = {}
     with open(os.path.join(pathf2, "setup.json"),'r') as json_data:
@@ -55,15 +65,17 @@ class IO(object):
         nu = 1.0*data["viscosity"]
         rho = 1.0*data["rho"]
         alpha = 1.0*data["Under-relaxation"]
-        crv = 1.0 * data["CRV"] #Cell refinement value
         x_dis = (domainSize[0]*1.0)/x #x-grid spacing
         y_dis = (domainSize[1]*1.0)/y #y-grid spacing
+        growthRatio = 1.0 * data["growthRatio"] #Cell growth ratio (towards the wall)
         U_wall = 0.0 #No slip wall velocity is (0,0)
         Ubcx = 1.0*Ubc[0] #Boundary velocity x-comp
         Ubcy = 1.0*Ubc[1] #Boundary velocity y-comp
 
         dx = np.array(grid_gen(x, y))  # cell length matrix
         dy = np.array(grid_gen(x, y))  # cell width matrix
+        xpt = np.array(grid_gen(x, y))  # x distances
+        ypt = np.array(grid_gen(x, y))  # y distances
         delXE = np.array(grid_gen(x, y))
         delXW = np.array(grid_gen(x, y))
         delYN = np.array(grid_gen(x, y))
@@ -116,7 +128,41 @@ class IO(object):
             delYN = np.transpose(delXW) # distance to South neighbour
 
 
-        #elif data["gridType"] in ['Non-Equidistant', 'non-equidistant']:
+        elif data["gridType"] in ['Non-Equidistant', 'non-equidistant']:
+
+            sum = 0
+            for m in range(0, i):
+                for n in range(0, j):
+
+                    #Calculate size of wall cell using growth ratio y = a*(1-x^n)/(1-x)
+                    nx = (x)/2 ; ny = (y)/2 #number of nodes till half way
+                    ax = (0.5*domainSize[0]) / ((1 - growthRatio ** nx) / (1 - growthRatio))
+                    ay = (0.5 *domainSize[1]) / ((1 - growthRatio ** ny) / (1 - growthRatio))
+
+                    if m > 0 and n < j/2:
+                        xpt[m][n] = ax * ((1 - growthRatio ** n) / (1 - growthRatio))
+
+                    elif m > 0 and n >= j/2:
+                        mirrX = j / 2 - (n - j / 2) - 1
+                        xpt[m][n] = xpt[m][mirrX]
+
+            for m in range(0, i):
+                for n in range(0, j):
+                    if (m > 1 and m <= i - 3 and n > 1 and n <= j - 3):
+                        dx[m][n] = xpt[m][n+1] - xpt[m][n]
+
+                    # if m < i/2 and n > 0:
+                    #     ypt[m][n] = ax * ((1 - growthRatio ** n) / (1 - growthRatio))
+                    # elif m >= i / 2 and n >0:
+                    #     mirrY = i / 2 - (m - i / 2) - 1
+                    #     ypt[m][n] = ypt[mirrY][n]
+
+                    # dy[m][n] = ay*((1 - growthRatio ** m) / (1 - growthRatio))
+
+        pprint(xpt[1])
+        pprint(dx[2])
+
+
 
 #Boundary conditions
         if data["A-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
@@ -151,27 +197,39 @@ class IO(object):
         i = np.size(grid_nodes, 0)
         j = np.size(grid_nodes, 1)
 
-        for m in range(0, i):
-            for n in range(0, j):
-                if(m > 0 and n == 1):
-                    grid_x[m][n] = (n)*dy[m][n]*0.5
-                if(m > 0 and n == j-2):
-                    grid_x[m][n] = ((j-2)*dy[5][5]) - (dy[m][n] * 0.5)
-                if (m > 0 and n == j - 1):
-                    grid_x[m][n] = ((j - 2) * dy[m][n])
-                if (m == 1 and n > 0):
-                    grid_y[m][n] = (m) * dx[m][n] * 0.5
-                if (m == i-2 and n > 0):
-                    grid_y[m][n] = ((i-2) * dx[5][5]) - (dx[m][n] * 0.5)
-                if (m == i-1 and n > 0):
-                    grid_y[m][n] = ((i-2) * dx[5][5])
-                if( m > 0 and n>1 and n < j-2):
-                    grid_x[m][n] = n * dy[m][n]
-                if (n > 0  and m > 1 and m < i - 2):
-                    grid_y[m][n] = m * dx[m][n]
+        # for m in range(0, i):
+        #     for n in range(0, j):
+        #
+        #         if (m != 0 and n != 0 and m != (i-1) and n != (j-1)):
+        #             grid_x[m][n] = (n * dy[m][n] * 0.5) + ((n-1) * dy[m][n] * 0.5)
+        #         if ( m == i-1 or n == j-1):
+        #             grid_x[m][n] = 1.0
+        #
+        #
+        # grid_x = cloneRowMat(grid_x,grid_x,2,1)
+        # grid_x = cloneRowMat(grid_x, grid_x, 11, 12)
+        # grid_y = np.transpose((grid_x))
 
+        # for m in range(0, i):
+        #     for n in range(0, j):
+        #         grid_y[m][n] = 1 - grid_y[m][n]
 
-
+        for m in range(i):
+            for n in range(j):
+                if m==0:
+                    x = 0
+                elif m<i-1:
+                    x=dy[m][n]*0.5 + dy[m][n]*(m-1)
+                else:
+                    x= domainSize[0]
+                if n==0:
+                    y = 0
+                elif n<j-1:
+                    y=dy[m][n]*0.5 + dy[m][n]*(n-1)
+                else:
+                    y= domainSize[1]
+                grid_x[n][m] = x
+                grid_y[n][m] = 1-y
 
 
 #############################################################################################################################################################################################################
