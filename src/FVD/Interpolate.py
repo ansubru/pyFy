@@ -40,6 +40,11 @@ class Interpolate(object):
         CDinterp = (x-y)/z
         return CDinterp
 
+    def weighted_interp(self,NP,NB,f):
+        """Function that performs interpolation based on provided interpolation weights"""
+        WTinterp = f*NB + (1-f)*NP
+        return WTinterp
+
 ##############################################################################################################################################################################################################
 
 

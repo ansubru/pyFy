@@ -57,6 +57,32 @@ class solFunc(object):
                     u[m][n] = UB  # pad bc velocities
         return u
 
+    def applyBCmus(self,kinit, omegainit, mut,muk, muomega):
+        """A function to Apply turbulent viscosity BC's"""
+        from IO import IO
+        IO_obj = IO("random")
+        sigmak = IO_obj.sigmak
+        sigmaomega = IO_obj.sigmaomega
+        cw2 = IO_obj.cw2
+        i = np.size(mut, 0)
+        j = np.size(mut, 1)
+        kloc = 0.0*kinit
+        omegaloc = 0.0*omegainit
+        mutloc = 0.0*mut
+        mukloc = 0.0 * mut
+        muomegaloc = 0.0*mut
+
+        # Apply bcs U and V
+        for m in range(0, j):
+            for n in range(0, i):
+                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                    kloc[m][n] = kinit
+                    omegaloc[m][n] = omegainit
+                    mutloc[m][n] = kloc[m][n]/omegaloc[m][n]
+                    mukloc[m][n] = mutloc[m][n]/sigmak
+                    muomegaloc[m][n] = mutloc[m][n] / sigmaomega
+        return u
+
     def setPress(self,P,x,y):
         """A function to set a fixed pressure at a grid point x,y"""
         i = np.size(P, 0)
@@ -118,6 +144,37 @@ class solFunc(object):
                 if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
                     mfe[m][n] = 0.0  # East face
 
+
+                if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
+                    mfn[m][n] = 0.0   # North face
+        return  mfe, mfn
+
+    def calcFaceMassFluxIW(self, u, v):
+        """A function to calc face mass fluxes using interpolation weights"""
+        from IO import IO
+        IO_obj = IO("random")
+        rho = IO_obj.rho  # Density in Kg/m3
+        dx = IO_obj.dx  # x-grid spacing
+        dy = IO_obj.dy  # y-grid spacing
+        # Interpolation weights
+        fxe = IO_obj.fxe
+        fyn = IO_obj.fyn
+
+        from Interpolate import Interpolate
+        Interp_obj = Interpolate()
+        i = np.size(u, 0)
+        j = np.size(u, 1)
+        mfe, mfn = 0.0 * u, 0.0 * u
+
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+
+                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                    mfe[m][n] = Interp_obj.weighted_interp(u[m][n], u[m][n + 1], fxe[m][n]) * dy[m][n] * rho  # East face
+                    mfn[m][n] = Interp_obj.weighted_interp(v[m][n], v[m - 1][n], fyn[m][n]) * dx[m][n] * rho  # North face
+
+                if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
+                    mfe[m][n] = 0.0  # East face
 
                 if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
                     mfn[m][n] = 0.0   # North face

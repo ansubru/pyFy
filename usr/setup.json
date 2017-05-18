@@ -11,6 +11,9 @@
         "B-bound":"fixed velocity",
         "C-bound":"walls",
         "D-bound":"walls",
+        "sigmak" : 2,
+        "sigmaomega" : 2,
+        "cw2" : 0.075,
         "Under-relaxation":0.7
 }
 

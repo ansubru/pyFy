@@ -43,14 +43,43 @@ class IO(object):
         grid = np.zeros(shape=(a,b))
         return grid
 
-    def cloneRowMat(F, G, l, p):
-        """A function to clone pth row from a matrix G to into the lth row of a matrix F (p > l)"""
-        j = np.size(F, 1)
-        for m in range(p):  # loop through rows
-            for n in range(j):  # loop through columns
-                if (m == p - 1):
-                    F[m][n] = G[l - 1][n]
-        return F
+    def neighborDist(dx, dy):
+        """A function to calculate distance to E, W, N and S neighbor"""
+
+        i = np.size(dx, 0)
+        j = np.size(dx, 1)
+        delXE, delXW, delYN, delYS = 0.0*dx,0.0*dx,0.0*dx,0.0*dx
+
+        for m in range(0, i):
+            for n in range(0, j):
+
+                # Apply bcs
+
+                if (m >= 0 and n == 0):  # A Boundary
+                    delXE[m][n] = 1.0  # pad bc distance
+                    delXW[m][n] = 1.0
+                elif (m == 0 and n != j - 1 and n != 0):  # B Boundary
+                    delXE[m][n] = 1.0  # pad bc distance
+                    delXW[m][n] = 1.0
+                elif (m >= 0 and n == j - 1):  # C Boundary
+                    delXE[m][n] = 1.0  # pad bc distance
+                    delXW[m][n] = 1.0
+                elif (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
+                    delXE[m][n] = 1.0  # pad bc distance
+                    delXW[m][n] = 1.0
+                elif (m >= 1 and n == 1):
+                    delXE[m][n] = 0.5*dx[m][n] + 0.5*dx[m][n+1]  # distance to East neighbour
+                    delXW[m][n] = 0.5 * dx[m][n]  # distance to West neighbour
+                elif (m >= 1 and n == i - 2):
+                    delXW[m][n] = 0.5*dx[m][n] + 0.5*dx[m][n-1]  # distance to West neighbour
+                    delXE[m][n] = 0.5 * dx[m][n]  # distance to East neighbour
+                else:
+                    delXW[m][n] = 0.5*dx[m][n] + 0.5*dx[m][n-1]
+                    delXE[m][n] = 0.5*dx[m][n] + 0.5*dx[m][n+1]
+
+        delYS = np.transpose(delXE)  # distance to North neighbour
+        delYN = np.transpose(delXW)  # distance to South neighbour
+        return delXE, delXW, delYN, delYS
 
 #Open pyFy/usr/setup.txt
     dataStorage = {}
@@ -68,6 +97,9 @@ class IO(object):
         x_dis = (domainSize[0]*1.0)/x #x-grid spacing
         y_dis = (domainSize[1]*1.0)/y #y-grid spacing
         growthRatio = 1.0 * data["growthRatio"] #Cell growth ratio (towards the wall)
+        sigmak = 1.0 * data["sigmak"]  # coeffs for wilcox model
+        sigmaomega = 1.0 * data["sigmaomega"]  # coeffs for wilcox model
+        cw2 = 1.0 * data["cw2"]  # coeffs for wilcox model
         U_wall = 0.0 #No slip wall velocity is (0,0)
         Ubcx = 1.0*Ubc[0] #Boundary velocity x-comp
         Ubcy = 1.0*Ubc[1] #Boundary velocity y-comp
@@ -97,36 +129,17 @@ class IO(object):
                     dx[m][n] = (domainSize[0]*1.0)/x  #cell size (x-direction)
                     dy[m][n] = (domainSize[1]*1.0)/y  #cell size (y-direction)
 
+            delXE, delXW, delYN, delYS = neighborDist(dx, dy) #Calculate distance to nearest E, W, N and S faces
+
+            # Calculate weighting factors (for face interpolation)
+            fxw, fxe, fyn, fys = 0.0 * delXE, 0.0 * delXE, 0.0 * delXE, 0.0 * delXE
             for m in range(0, i):
                 for n in range(0, j):
-
-                    # Apply bcs
-
-                    if (m >= 0 and n == 0):  # A Boundary
-                        delXE[m][n] = 1.0  # pad bc distance
-                        delXW[m][n] = 1.0
-                    elif (m == 0 and n != j - 1 and n != 0):  # B Boundary
-                        delXE[m][n] = 1.0  # pad bc distance
-                        delXW[m][n] = 1.0
-                    elif (m >= 0 and n == j - 1):  # C Boundary
-                        delXE[m][n] = 1.0  # pad bc distance
-                        delXW[m][n] = 1.0
-                    elif (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
-                        delXE[m][n] = 1.0  # pad bc distance
-                        delXW[m][n] = 1.0
-                    elif (m >= 1 and n == 1):
-                        delXE[m][n] = dx[m][n]  # distance to East neighbour
-                        delXW[m][n] = 0.5* dx[m][n]  # distance to West neighbour
-                    elif (m >= 1 and n == i-2):
-                        delXW[m][n] = dx[m][n] # distance to West neighbour
-                        delXE[m][n] = 0.5 * dx[m][n]  # distance to East neighbour
-                    else:
-                        delXW[m][n] = dx[m][n]
-                        delXE[m][n] = dx[m][n]
-
-            delYS = np.transpose(delXE) # distance to North neighbour
-            delYN = np.transpose(delXW) # distance to South neighbour
-
+                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                        fxe[m][n] = 0.5 * dx[m][n] / delXE[m][n]
+                        fxw[m][n] = 0.5 * dx[m][n] / delXW[m][n]
+                        fyn[m][n] = 0.5 * dy[m][n] / delYN[m][n]
+                        fys[m][n] = 0.5 * dy[m][n] / delYS[m][n]
 
         elif data["gridType"] in ['Non-Equidistant', 'non-equidistant']:
 
@@ -138,26 +151,38 @@ class IO(object):
                     ax = (0.5*domainSize[0]) / ((1 - growthRatio ** nx) / (1 - growthRatio))
                     ay = (0.5 *domainSize[1]) / ((1 - growthRatio ** ny) / (1 - growthRatio))
 
-                    if m >= 0 and n < j/2:
+                    if m >= 0 and n <= j/2:
                         xpt[m][n] = ax * ((1 - growthRatio ** n) / (1 - growthRatio))
 
-                    if m >= 0 and n >= j/2:
+                    if m >= 0 and n > j/2:
                         mirrX = j / 2 - (n - j / 2) - 1
                         xpt[m][n] = 1 - xpt[m][mirrX]
-                    if m == n == 0 :
-                        xpt[m][n] = 0.0
 
             ypt = np.transpose(xpt)
             ypt = 1 - ypt
 
             for m in range(0, i):
                 for n in range(0, j):
-                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
-                        dx[m][n] = xpt[m][n+1] - xpt[m][n]
-                        dy[m][n] = ypt[m+1][n] - xpt[m][n]
-            print dx[1]
-            print xpt[1]
+                    if m >= 0 and n < j / 2 and n != 0:
+                        dx[m][n] = xpt[m][n] - xpt[m][n-1]
 
+                    if m >= 0 and n >= j/2 and n != j-1:
+                        mirreX = j / 2 - (n - j / 2) - 1
+                        dx[m][n] = dx[m][mirreX]
+            dy = np.transpose(dx)
+
+            delXE, delXW, delYN, delYS = neighborDist(dx, dy)  # Calculate distance to nearest E, W, N and S faces
+
+            #Calculate weighting factors (for face interpolation)
+            fxw, fxe, fyn, fys = 0.0*delXE,0.0*delXE,0.0*delXE,0.0*delXE
+
+            for m in range(0, i):
+                for n in range(0, j):
+                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                        fxe[m][n] = 0.5*dx[m][n]/delXE[m][n]
+                        fxw[m][n] = 0.5 * dx[m][n] / delXW[m][n]
+                        fyn[m][n] = 0.5 * dy[m][n] / delYN[m][n]
+                        fys[m][n] = 0.5 * dy[m][n] / delYS[m][n]
 #Boundary conditions
         if data["A-bound"] in ['walls', 'Walls', 'wall', 'Wall']:
             UA = VA = U_wall
@@ -187,44 +212,41 @@ class IO(object):
             UD = Ubcx
             VD = Ubcy
 
-        # Create array with x,y co-ordinates from generated grid
-        i = np.size(grid_nodes, 0)
-        j = np.size(grid_nodes, 1)
-
-        # for m in range(0, i):
-        #     for n in range(0, j):
-        #
-        #         if (m != 0 and n != 0 and m != (i-1) and n != (j-1)):
-        #             grid_x[m][n] = (n * dy[m][n] * 0.5) + ((n-1) * dy[m][n] * 0.5)
-        #         if ( m == i-1 or n == j-1):
-        #             grid_x[m][n] = 1.0
-        #
-        #
-        # grid_x = cloneRowMat(grid_x,grid_x,2,1)
-        # grid_x = cloneRowMat(grid_x, grid_x, 11, 12)
-        # grid_y = np.transpose((grid_x))
-
-        # for m in range(0, i):
-        #     for n in range(0, j):
-        #         grid_y[m][n] = 1 - grid_y[m][n]
+        ## GRID FOR PLOTTING
 
         for m in range(i):
             for n in range(j):
-                if m==0:
-                    x = 0
-                elif m<i-1:
-                    x=dy[m][n]*0.5 + dy[m][n]*(m-1)
+
+                if data["gridType"] in ['Equidistant', 'equidistant']:
+                    if m==0:
+                        x = 0
+                    elif m<i-1:
+                        x=dy[m][n]*0.5 + dy[m][n]*(m-1)
+                    else:
+                        x= domainSize[0]
+                    if n==0:
+                        y = 0
+                    elif n<j-1:
+                        y=dy[m][n]*0.5 + dy[m][n]*(n-1)
+                    else:
+                        y= domainSize[1]
                 else:
-                    x= domainSize[0]
-                if n==0:
-                    y = 0
-                elif n<j-1:
-                    y=dy[m][n]*0.5 + dy[m][n]*(n-1)
-                else:
-                    y= domainSize[1]
+                    #TODO:
+                    if m==0:
+                        x = 0
+                    elif m<i-1:
+                        x=dy[m][n]*0.5 + dy[m][n]*(m-1)
+                    else:
+                        x= domainSize[0]
+                    if n==0:
+                        y = 0
+                    elif n<j-1:
+                        y=dy[m][n]*0.5 + dy[m][n]*(n-1)
+                    else:
+                        y= domainSize[1]
+
                 grid_x[n][m] = x
                 grid_y[n][m] = 1-y
-
 
 #############################################################################################################################################################################################################
 
