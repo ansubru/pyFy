@@ -35,7 +35,6 @@ class solFunc(object):
     def __init__(self):
         """Return object"""
 
-
  ###----------------------------------------------------------------------------RELEVANT FUNCTION DEFINITIONS-----------------------------------------------------------------------------------------------###
 
     def applyBCs(self,U,UA,UB,UC,UD):
@@ -57,32 +56,67 @@ class solFunc(object):
                     u[m][n] = UB  # pad bc velocities
         return u
 
-    def applyBCmus(self,kinit, omegainit, mut,muk, muomega):
-        """A function to Apply turbulent viscosity BC's"""
-        #TODO: look at bcs for k and omega
+    def initializeOmega(self, omegainit):
+        """A function to initialize omega"""
         from IO import IO
         IO_obj = IO("random")
-        sigmak = IO_obj.sigmak
-        sigmaomega = IO_obj.sigmaomega
+        nu = IO_obj.nu
+        delXW = IO_obj.delXW
+        omegabc =0.0 * delXW
         cw2 = IO_obj.cw2
-        i = np.size(mut, 0)
-        j = np.size(mut, 1)
-        kloc = 0.0*kinit
-        omegaloc = 0.0*omegainit
-        mutloc = 0.0*mut
-        mukloc = 0.0 * mut
-        muomegaloc = 0.0*mut
+        i = np.size(omegabc, 0)
+        j = np.size(omegabc, 1)
 
-        # Apply bcs k and omega
+        # Apply bcs omega
         for m in range(0, j):
             for n in range(0, i):
+
+                if (m > 0 and m < i - 1 and n == j - 2 or n == 1):  # Boundary face WEST and EAST first grid nodes
+                    omegabc[m][n] = 6*nu/cw2*delXW[1][1]**2 # all first grid nodes are delXW[1][1] away from the walls
+
+                elif (m == 1 or m== i-2 and n > 0 and n < j - 1):  # Boundary face NORTH and SOUTH first grid nodes
+                    omegabc[m][n] = 6*nu/cw2*delXW[1][1]**2  # all first grid nodes are delXW[1][1] away from the walls
+
+                elif (m > 0 and m < i - 1 and n == j - 1 or n == 0):
+                    omegabc[m][n] = 1  # some random value of omega for wall (not used at all)
+
+                elif (m == 0 or m== i-1 and n > 0 and n < j - 1):  # Boundary face NORTH and SOUTH first grid nodes
+                    omegabc[m][n] = 1  # some random value of omega for wall (not used at all)
+
+                else:
+                    omegabc[m][n] = omegainit
+        return omegabc
+
+    def initializeK(self, kinit):
+        """A function to initialize k"""
+        from IO import IO
+        IO_obj = IO("random")
+        k = 0.0*IO_obj.grid_x
+        i = np.size(k, 0)
+        j = np.size(k, 1)
+
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+
                 if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
-                    kloc[m][n] = kinit
-                    omegaloc[m][n] = omegainit
-                    mutloc[m][n] = kloc[m][n]/omegaloc[m][n]
-                    mukloc[m][n] = mutloc[m][n]/sigmak
-                    muomegaloc[m][n] = mutloc[m][n] / sigmaomega
-        return u
+                    k[m][n] = kinit
+        return k
+
+    def calcMuts(self, k, omega):
+        """A function to calculate mut/sigmak term in k equation and mut/sigmaomega term in omega equation"""
+        from IO import IO
+        IO_obj = IO("random")
+        rho = IO_obj.rho
+        sigmak = IO_obj.sigmak #turbulent prandtl number
+        muts = 0.0*k
+        i = np.size(k, 0)
+        j = np.size(k, 1)
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+                muts[m][n] = rho*k[m][n]/sigmak*omega[m][n]
+        return muts
+
+
 
     def setPress(self,P,x,y):
         """A function to set a fixed pressure at a grid point x,y"""

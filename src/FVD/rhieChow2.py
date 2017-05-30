@@ -38,7 +38,7 @@ class rhieChow2(object):
 
 
  ###----------------------------------------------------------------------------RELEVANT FUNCTION DEFINITIONS-----------------------------------------------------------------------------------------------###
-    def rcInterp2(self, matU, matV, mdotw, mdote, mdotn, mdots, matP, mut, mutk, mutomega, flag):
+    def rcInterp2(self, matU, matV, mdotw, mdote, mdotn, mdots, matP):
         """A function that provides necessary corrections for face mass fluxes"""
 
         def rhicE(PEE, PE, PP, PW):
@@ -67,10 +67,8 @@ class rhieChow2(object):
         # Obtain face interpolated coeffs
         from Discretize2 import Discretize2
         disc_obj2 = Discretize2()
-        if flag in ['laminar', 'Laminar']:
-            aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2(u, v, mdotw, mdote, mdotn, mdots, Px)
-        else:
-            aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2(u, v, mdotw, mdote, mdotn, mdots, mut,  mutk, mutomega, Px)
+
+        aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2(u, v, mdotw, mdote, mdotn, mdots, Px)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)

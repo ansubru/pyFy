@@ -77,11 +77,12 @@ eps = 1
 #Apply BCs
 U = solFunc_obj.applyBCs(U,UA,UB,UC,UD) #Apply U bcs
 V = solFunc_obj.applyBCs(V,VA,VB,VC,VD) #Apply V bcs
-k = 0.001
-omega = 100
-mut = 0.0 * grid
-mutk = k/omega
-mutomega = k/omega
+kinit = 0.01 #initial guess
+omegainit = 100 #initial guess
+k = solFunc_obj.initializeK(kinit)
+omegain = solFunc_obj.initializeOmega(omegainit)
+# COPY omegaw TO BOUNDARY
+omega = solFunc_obj.setPsetbcs(omegain)
 ########################################################################################################################################################################################################
 
 caseType = "Turbulent"
@@ -102,10 +103,9 @@ interinp = 1 #number of outer iterations
     # --> Returns face values of flux and velocities along with A and b matrices
 while (outerIters < interinp):
     mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev = mdotw, mdote, mdotn, mdots #mdot from previous iteration
-    mutold = mut
     outerIters += 1
     print "Solving iteration %i"%(outerIters)
-    aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2( U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , mutold, mutk, mutomega, P)
+    aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2( U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , P)
 
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolatio
@@ -119,7 +119,7 @@ while (outerIters < interinp):
     #Step 2 : RHIE-CHOW INTERPOLATION
     # --> correct face velocities (EAST AND NORTH FACES ALONE)
 
-    pcorre, pcorrn = rc_obj.rcInterp2(U,  V, mdotw, mdote, mdotn, mdots ,P , mut, mutk, mutomega, caseType)
+    pcorre, pcorrn = rc_obj.rcInterp2(U,  V, mdotw, mdote, mdotn, mdots ,P)
 
     ## Step 2a : Correct face fluxes with rhie chow
     mstare, mstarn =  solFunc_obj.calcFaceMassFluxIW(Ustar,Vstar) # --> Get east and north face mass fluxes for Ustar and Vstar (INTERPOLATION WEIGHTED)
@@ -159,6 +159,7 @@ while (outerIters < interinp):
     Pnew = solFunc_obj.rlxP(P, Pset, alpha)
 
     ## Step 8 : Solve k equation
+    mut = solFunc_obj.calcMuts(k,omega)
 #
 #     #Step 8 : Calculate residual
 #     resU, resV, resP, resB = res_obj.calcRes(U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , P, b)
