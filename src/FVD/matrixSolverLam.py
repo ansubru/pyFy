@@ -76,6 +76,8 @@ eps = 1
 U = solFunc_obj.applyBCs(U,UA,UB,UC,UD) #Apply U bcs
 V = solFunc_obj.applyBCs(V,VA,VB,VC,VD) #Apply V bcs
 mut = 1 # DUMMY mut
+mutk = 1
+mutomega = 1
 
 ########################################################################################################################################################################################################
 
@@ -86,9 +88,9 @@ caseType = "Laminar"
 iters = 20 #number of gauss seidel sweeps
 resInp = 1e-3 #residual for gauss seidel
 residual = 1e-8 #residual for equations
-interinp = 1 #number of outer iterations
+interinp = 30 #number of outer iterations
 
-################################################################################### SOLVER ##################################################################################################################
+################################################################################## SOLVER ##################################################################################################################
 
     #Step 1 : Solve for U,V using interpolated pressure using Discretize class obj
     # Discretize U velocity using FOU --> P is checkerboarded (no rhie-chow interpolation)
@@ -106,69 +108,69 @@ while (outerIters < interinp):
     Ustar = gs_obj.gaussSeidel3u(U, aW, aE, aN, aS, aPmod,SUxmod, iters)
     #print Ustar
 
-    # #Step 1b : Solve for V using gauss seidel method
-    # # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
-
-    Vstar = gs_obj.gaussSeidel3u(V, aW, aE, aN, aS, aPmod,SUymod, iters)
-
-    # print ("APMOD AT %i iteration" %(outerIters))
-    # print Ustar
-    # print ("APMOD AT %i iteration" %(outerIters))
-    #Step 2 : RHIE-CHOW INTERPOLATION
-    # --> correct face velocities (EAST AND NORTH FACES ALONE)
-
-    pcorre, pcorrn = rc_obj.rcInterp2(U,  V, mdotw, mdote, mdotn, mdots ,P , mut, caseType)
-
-    # Step 2a : Correct face fluxes with rhie chow
-    mstare, mstarn =  solFunc_obj.calcFaceMassFlux(Ustar,Vstar) # --> Get east and north face mass fluxes for Ustar and Vstar
-    mdote,mdotn = solFunc_obj.correctFaceMassFlux(mstare,mstarn,pcorre,pcorrn) # --> Correct with rhie-chow to get corrected mdote and motn
-    mdotw, mdots = solFunc_obj.getFaceMassFluxWS(mdote,mdotn) #--> Get corrected mdotw and mdots
-
-    #Step 3 : Solve P' equation using U velocities
-    # --> Calculates co-eff aP, aW, aW, aN, aS, at faces
-    # --> Calculates b matrix (Fw - Fe + Fs - Fn)
-    # --> Solve P' using gauss seidel
-
-    #Step 3a : Create B term (error in continuity)
-    b = solFunc_obj.calcBterm(mdotw, mdote,mdotn ,mdots)
-
-    #Step 3b #Solve P' using co-eff for Pprime equation
-
-    Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, iters)
-
-    #Step 4 : Set pressure based on value at cell (2,2)
-    #Set P' level
-    x = 1; y = 1; # Grid cell where P is fixed to zero
-    Pset = solFunc_obj.setPress(Pprime,x,y)
-
-    #COPY Pset TO BOUNDARY
-    Pset = solFunc_obj.setPsetbcs(Pset)
-
-    # #Step 5 : Pressure straddling
-
-    mdoteNew, mdotnNew = corr_obj.massFluxcorr(Pset,mdote, mdotn, aEpp, aNpp)
-
-    mdotwNew, mdotsNew = solFunc_obj.getFaceMassFluxWS(mdoteNew, mdotnNew)  # --> Get new mdotw and mdots
-
-    uNew, vNew = corr_obj.velcorr(Ustar,Vstar,Pset, aPmod) # --> Correct u and v velcoities
-
-    # #Step 7 : Under relax P'
-    Pnew = solFunc_obj.rlxP(P, Pset, alpha)
-
-    #Step 8 : Calculate residual
-    resU, resV, resP, resB = res_obj.calcRes(U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , P, b)
-    eps = max(resU, resV, resP, resB)
-    resplotU.append(resU)
-    resplotV.append(resV)
-    resplotP.append(resP)
-    resplotB.append(resB)
-
-    #Replace U,V, mdotw, mdote, mdotn, mdots and P
-    U = uNew
-    V = vNew
-    mdotw = mdotwNew; mdote = mdoteNew; mdotn = mdotnNew; mdots = mdotsNew
-    P = Pnew
-
-# #Plot residuals
-xpt, ypt = plt_obj.genGrid(U)
-plt_obj.plotContours(xpt,ypt,U,V,P,resplotU, resplotV, resplotP, resplotB,outerIters)
+#     # #Step 1b : Solve for V using gauss seidel method
+#     # # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
+#
+#     Vstar = gs_obj.gaussSeidel3u(V, aW, aE, aN, aS, aPmod,SUymod, iters)
+#
+#     # print ("APMOD AT %i iteration" %(outerIters))
+#     # print Ustar
+#     # print ("APMOD AT %i iteration" %(outerIters))
+#     #Step 2 : RHIE-CHOW INTERPOLATION
+#     # --> correct face velocities (EAST AND NORTH FACES ALONE)
+#
+#     pcorre, pcorrn = rc_obj.rcInterp2(U,  V, mdotw, mdote, mdotn, mdots ,P , mut, mutk, mutomega, caseType)
+#
+#     # Step 2a : Correct face fluxes with rhie chow
+#     mstare, mstarn =  solFunc_obj.calcFaceMassFlux(Ustar,Vstar) # --> Get east and north face mass fluxes for Ustar and Vstar
+#     mdote,mdotn = solFunc_obj.correctFaceMassFlux(mstare,mstarn,pcorre,pcorrn) # --> Correct with rhie-chow to get corrected mdote and motn
+#     mdotw, mdots = solFunc_obj.getFaceMassFluxWS(mdote,mdotn) #--> Get corrected mdotw and mdots
+#
+#     #Step 3 : Solve P' equation using U velocities
+#     # --> Calculates co-eff aP, aW, aW, aN, aS, at faces
+#     # --> Calculates b matrix (Fw - Fe + Fs - Fn)
+#     # --> Solve P' using gauss seidel
+#
+#     #Step 3a : Create B term (error in continuity)
+#     b = solFunc_obj.calcBterm(mdotw, mdote,mdotn ,mdots)
+#
+#     #Step 3b #Solve P' using co-eff for Pprime equation
+#
+#     Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, iters)
+#
+#     #Step 4 : Set pressure based on value at cell (2,2)
+#     #Set P' level
+#     x = 1; y = 1; # Grid cell where P is fixed to zero
+#     Pset = solFunc_obj.setPress(Pprime,x,y)
+#
+#     #COPY Pset TO BOUNDARY
+#     Pset = solFunc_obj.setPsetbcs(Pset)
+#
+#     # #Step 5 : Pressure straddling
+#
+#     mdoteNew, mdotnNew = corr_obj.massFluxcorr(Pset,mdote, mdotn, aEpp, aNpp)
+#
+#     mdotwNew, mdotsNew = solFunc_obj.getFaceMassFluxWS(mdoteNew, mdotnNew)  # --> Get new mdotw and mdots
+#
+#     uNew, vNew = corr_obj.velcorr(Ustar,Vstar,Pset, aPmod) # --> Correct u and v velcoities
+#
+#     # #Step 7 : Under relax P'
+#     Pnew = solFunc_obj.rlxP(P, Pset, alpha)
+#
+#     #Step 8 : Calculate residual
+#     resU, resV, resP, resB = res_obj.calcRes(U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , P, b)
+#     eps = max(resU, resV, resP, resB)
+#     resplotU.append(resU)
+#     resplotV.append(resV)
+#     resplotP.append(resP)
+#     resplotB.append(resB)
+#
+#     #Replace U,V, mdotw, mdote, mdotn, mdots and P
+#     U = uNew
+#     V = vNew
+#     mdotw = mdotwNew; mdote = mdoteNew; mdotn = mdotnNew; mdots = mdotsNew
+#     P = Pnew
+#
+# # #Plot residuals
+# xpt, ypt = plt_obj.genGrid(U)
+# plt_obj.plotContours(xpt,ypt,U,V,P,resplotU, resplotV, resplotP, resplotB,outerIters)

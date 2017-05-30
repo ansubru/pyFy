@@ -70,7 +70,7 @@ class rhieChow2(object):
         if flag in ['laminar', 'Laminar']:
             aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2(u, v, mdotw, mdote, mdotn, mdots, Px)
         else:
-            aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2(u, v, mdotw, mdote, mdotn, mdots, mut, Px)
+            aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2(u, v, mdotw, mdote, mdotn, mdots, mut,  mutk, mutomega, Px)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)

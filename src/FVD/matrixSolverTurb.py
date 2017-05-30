@@ -79,7 +79,7 @@ U = solFunc_obj.applyBCs(U,UA,UB,UC,UD) #Apply U bcs
 V = solFunc_obj.applyBCs(V,VA,VB,VC,VD) #Apply V bcs
 k = 0.001
 omega = 100
-mut = k/omega
+mut = 0.0 * grid
 mutk = k/omega
 mutomega = k/omega
 ########################################################################################################################################################################################################
@@ -105,7 +105,7 @@ while (outerIters < interinp):
     mutold = mut
     outerIters += 1
     print "Solving iteration %i"%(outerIters)
-    aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2( U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , mutold, P)
+    aW, aE, aN, aS,aWp, aEp, aNp, aSp, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2( U,  V, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , mutold, mutk, mutomega, P)
 
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolatio

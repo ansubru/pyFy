@@ -38,6 +38,8 @@ class gaussSiedel2(object):
         #Initialize all relevant variables:u, v, p etc.
         i = np.size(u, 0)
         j = np.size(u, 1)
+        ugs = 0.0*u
+        uold = 0.0*u
 
         iter = 0 # Mock up error parameter only to run the While
         residual = 1
@@ -49,16 +51,17 @@ class gaussSiedel2(object):
                 for n in range(j):  # loop through columns
                     if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  #Internal nodes:
 
+                        uold[m][n] = u[m][n]
                         uN = u[m - 1][n]
                         uS = u[m + 1][n]
                         uE = u[m][n + 1]
                         uW = u[m][n - 1]
 
-                        u[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
+                        ugs[m][n]=(uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
                                            uN*aN[m][n]+SUx[m][n])/aP[m][n]
-                        sumRes = sumRes + (uW* aW[m][n]+ uE*aE[m][n]+uS*aS[m][n]+\
-                                           uN*aN[m][n]+SUx[m][n]) - u[m][n]*aP[m][n]
+                        sumRes = sumRes + abs(uold[m][n] - ugs[m][n])
             iter += 1
+            u = ugs #update u
             residual = abs(sumRes)
 
         print "Solved G-S with %i iterations"%(iter)

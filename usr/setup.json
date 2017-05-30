@@ -14,7 +14,7 @@
         "sigmak" : 2,
         "sigmaomega" : 2,
         "cw2" : 0.075,
-        "Under-relaxation":0.7
+        "Under-relaxation":0.1
 }
 
 
