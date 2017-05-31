@@ -87,6 +87,7 @@ class IO(object):
         dataStorage = json.load(json_data)
         data = dataStorage
 #Data extraction
+        ### DOMAIN SIZE DATA #############################
         x = data["xNodes"]
         y = data["yNodes"]
         domainSize = data["domain"]
@@ -97,9 +98,15 @@ class IO(object):
         x_dis = (domainSize[0]*1.0)/x #x-grid spacing
         y_dis = (domainSize[1]*1.0)/y #y-grid spacing
         growthRatio = 1.0 * data["growthRatio"] #Cell growth ratio (towards the wall)
+
+        ### COEFFS FOR TURBULENCE MODEL#############################
         sigmak = 1.0 * data["sigmak"]  # coeffs for wilcox model
         sigmaomega = 1.0 * data["sigmaomega"]  # coeffs for wilcox model
+        cw1 = 1.0 * data["cw1"]  # coeffs for wilcox model
         cw2 = 1.0 * data["cw2"]  # coeffs for wilcox model
+        betastar = 1.0 * data["betastar"]  # coe-eff for wilcox model
+        #################################################################
+
         U_wall = 0.0 #No slip wall velocity is (0,0)
         Ubcx = 1.0*Ubc[0] #Boundary velocity x-comp
         Ubcy = 1.0*Ubc[1] #Boundary velocity y-comp
@@ -159,7 +166,7 @@ class IO(object):
                         xpt[m][n] = 1 - xpt[m][mirrX]
 
             ypt = np.transpose(xpt)
-            ypt = 1 - ypt
+            #ypt = 1 - ypt
 
             for m in range(0, i):
                 for n in range(0, j):

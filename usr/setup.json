@@ -4,7 +4,7 @@
         "yNodes":64,
         "gridType":"Non-Equidistant",
         "growthRatio":1.15,
-        "viscosity":0.001,
+        "viscosity":0.000001,
         "rho":1.0,
         "boundary-velocity":[1.0,0.0],
         "A-bound":"walls",
@@ -13,7 +13,9 @@
         "D-bound":"walls",
         "sigmak" : 2,
         "sigmaomega" : 2,
+        "cw1" : 0.5555555556,
         "cw2" : 0.075,
+        "betastar" : 0.09,
         "Under-relaxation":0.1
 }
 

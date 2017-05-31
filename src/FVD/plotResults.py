@@ -107,6 +107,69 @@ class plotResults(object):
         grid_y = IO_obj.grid_y
         return grid_x, grid_y
 
+    def plotdataTurb(self, U, V, k, omega, Y, mut, resU, resV, resK, resomega, it):
+
+        i = np.size(U, 0)
+        j = np.size(V, 1)
+
+        y = []
+        Uplot = []
+        Vplot = []
+        kplot = []
+        omegaplot = []
+        mutplot = []
+        iter = list(range(1, it + 2))
+
+
+        for m in range(i):
+            for n in range(j):
+                if m>0 and n == 5:
+                    y.append(Y[m,n])
+                    Uplot.append(0.5*(U[m,n]+U[m,n+1]))
+                    Vplot.append(0.5*(V[m,n]+V[m,n+1]))
+                    kplot.append(0.5 * (k[m, n] + k[m, n + 1]))
+                    omegaplot.append(0.5 * (omega[m, n] + omega[m, n + 1]))
+                    mutplot.append(0.5 * (mut[m, n] + mut[m, n + 1]))
+
+        LarsData = np.loadtxt('LarsDataTurb.txt', skiprows=1)
+
+        plt.figure
+        plt.subplot(231)
+        plt.plot(LarsData[:, 0], LarsData[:, 2], 'ro', label='lada U')
+        plt.plot(Uplot[0:-1], y[0:-1], 'k-', label='my U')
+        plt.ylabel('y [m]')
+        plt.xlabel('velocity [m/s]')
+        plt.subplot(232)
+        plt.plot(LarsData[:, 1], LarsData[:, 2], 'ro', label='lada V')
+        plt.plot(Vplot[0:-1], y[0:-1], 'k-', label='my V')
+        plt.ylabel('y [m]')
+        plt.xlabel('velocity [m/s]')
+        plt.subplot(233)
+        plt.plot(LarsData[:, 3], LarsData[:, 2], 'ro', label='lada k')
+        plt.plot(kplot[0:-1], y[0:-1], 'k-', label='my k')
+        plt.ylabel('y [m]')
+        plt.xlabel('Turbulent kinetic energy [m2/s2]')
+        plt.subplot(234)
+        plt.plot(LarsData[:, 4], LarsData[:, 2], 'ro', label='lada omega')
+        plt.plot(omegaplot[0:-1], y[0:-1], 'k-', label='my omega')
+        plt.ylabel('y [m]')
+        plt.xlabel('Turbulent dissipation rate [1/s]')
+        plt.subplot(235)
+        plt.plot(LarsData[:, 5], LarsData[:, 2], 'ro', label='lada mut')
+        plt.plot(omegaplot[0:-1], y[0:-1], 'k-', label='my mut')
+        plt.ylabel('y [m]')
+        plt.xlabel('Turbulent viscosity [pa.s]')
+        plt.subplot(236)
+        plt.semilogy(iter[1:-1], resU[1:-1], 'blue', label="U-velocity")
+        plt.semilogy(iter[1:-1], resV[1:-1], 'black', label="V-velocity")
+        plt.semilogy(iter[1:-1], resK[1:-1], 'red', label="k")
+        plt.semilogy(iter[1:-1], resomega[1:-1], 'green', label="omega")
+        plt.xlabel('Number of iterations')
+        plt.ylabel('Residual')
+        plt.grid(True)
+        plt.grid(which='both')
+        plt.show()
+
 
 
 

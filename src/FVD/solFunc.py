@@ -72,10 +72,10 @@ class solFunc(object):
             for n in range(0, i):
 
                 if (m > 0 and m < i - 1 and n == j - 2 or n == 1):  # Boundary face WEST and EAST first grid nodes
-                    omegabc[m][n] = 6*nu/cw2*delXW[1][1]**2 # all first grid nodes are delXW[1][1] away from the walls
+                    omegabc[m][n] = 6*nu/(cw2*delXW[1][1]**2) # all first grid nodes are delXW[1][1] away from the walls
 
                 elif (m == 1 or m== i-2 and n > 0 and n < j - 1):  # Boundary face NORTH and SOUTH first grid nodes
-                    omegabc[m][n] = 6*nu/cw2*delXW[1][1]**2  # all first grid nodes are delXW[1][1] away from the walls
+                    omegabc[m][n] = 6*nu/(cw2*delXW[1][1]**2)  # all first grid nodes are delXW[1][1] away from the walls
 
                 elif (m > 0 and m < i - 1 and n == j - 1 or n == 0):
                     omegabc[m][n] = 1  # some random value of omega for wall (not used at all)
@@ -109,14 +109,14 @@ class solFunc(object):
         rho = IO_obj.rho
         sigmak = IO_obj.sigmak #turbulent prandtl number
         muts = 0.0*k
+        mut = 0.0 * k
         i = np.size(k, 0)
         j = np.size(k, 1)
         for m in range(i):  # loop through rows
             for n in range(j):  # loop through columns
-                muts[m][n] = rho*k[m][n]/sigmak*omega[m][n]
-        return muts
-
-
+                muts[m][n] = rho*k[m][n]/(sigmak*omega[m][n])
+                mut[m][n] = rho * k[m][n] / omega[m][n]
+        return mut, muts
 
     def setPress(self,P,x,y):
         """A function to set a fixed pressure at a grid point x,y"""

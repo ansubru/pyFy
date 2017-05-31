@@ -259,7 +259,7 @@ class Discretize2(object):
 
 #######################################                                TURBULENT FLOW DISCRETIZATION          #########################################################################################################################
 
-    def FOU_discTurb2(self, matU, matV, matk, matomega, mdotw, mdote, mdotn, mdots, mutmat, flag):
+    def FOU_discTurb2(self, matU, matV, matk, matomega, mdotw, mdote, mdotn, mdots, mutmat,matP, flag):
         """A function that discretizes k and omega equations for turbulent flow using first order upwind (Wilcox model)"""
 
         def underlxaP(ap, coeff):
@@ -289,28 +289,20 @@ class Discretize2(object):
         delXE = IO_obj.delXE  # distance to Eastern neighbour
         delYN = IO_obj.delYN  # distance to Northern neighbour
         delYS = IO_obj.delYS  # distance to Northern neighbour
-        betastar = 0.09 #coe-eff for wilcox model
-        cw2 = IO_obj.cw2
-        #Interpolation weights
-        fxe = IO_obj.fxe
-        fxw = IO_obj.fxw
-        fyn = IO_obj.fyn
-        fys = IO_obj.fys
 
-        # Boundary conditions
-        uA = IO_obj.UA
-        uB = IO_obj.UB
-        uC = IO_obj.UC
-        uD = IO_obj.UD
-        vA = IO_obj.VA
-        vB = IO_obj.VB
-        vC = IO_obj.VC
-        vD = IO_obj.VD
+        ############## COEFFS FOR TURBULENCE MODEL################
+        cw1 = IO_obj.cw1 # coeffs for wilcox model
+        cw2 =IO_obj.cw2  # coeffs for wilcox model
+        betastar = IO_obj.betastar  # coe-eff for wilcox model
+        ##############################################################
 
         ##############-------CREATE INTERPOLATE OBJECT----------################
 
         from Interpolate import Interpolate
         Interp_obj = Interpolate()
+
+        from solFunc import solFunc
+        solFunc_obj = solFunc()
         ###############------------------------------------------################
         # Initialize all relevant variables:u, v, p etc.
         u = 1.0 * matU
@@ -318,18 +310,21 @@ class Discretize2(object):
         k = 1.0 * matk
         omega = 1.0 * matomega
         mut = 1.0*mutmat
-        Fe = 0.0 * matU; Fw = 0.0 * matU; Fn = 0.0 * matU; Fs = 0.0 * matU;
+        Px = 1.0 * matP; dPx = 0.0 * matU; dPy = 0.0 * matU; Fe = 0.0 * matU; Fw = 0.0 * matU; Fn = 0.0 * matU; Fs = 0.0 * matU;
 
        #Initialize all relevant co-efficients
         aP = 0.0*matU; aPmod = 0.0*matU; aW = 0.0*matU; aWp = 0.0*matU; aE = 0.0*matU; aEp= 0.0*matU; aN= 0.0*matU; aNp= 0.0*matU; aS= 0.0*matU; aSp = 0.0*matU;
         aWpp = 0.0 * matU; aEpp = 0.0 * matU; aSpp = 0.0 * matU; aNpp = 0.0 * matU; aPpp = 0.0 * matU;
 
-        SU = 0.0*matU; SUmod = 0.0*matU; SP = 0.0*matU;
+        SU = 0.0*matU; SUmod = 0.0*matU; SP = 0.0*matU; Pk = 0.0*matU; SUxmod = 0.0*matU; SUymod = 0.0*matU; SUx = 0.0*matU; SUy = 0.0*matU;
 
         DxE = 0.0*matU; DxW = 0.0*matU; DyN = 0.0*matU; DyS = 0.0*matU;
 
         # Initialize face velocities
         ufe, ufw, vfn, vfs = 0.0 * u, 0.0 * u, 0.0 * u, 0.0 * u  # u face velocities at each grid node
+
+        #Calculate gradients (for u and v)
+        ugradx, ugrady, vgradx, vgrady = solFunc_obj.calcGradIW(u,v)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)
@@ -349,21 +344,24 @@ class Discretize2(object):
                     vfn[m][n] = mdotn[m][n] / (rho * dx[m][n])  # North face
                     vfs[m][n] = mdots[m][n] / (rho * dx[m][n])  # South face
 
-                    #Source terms for the k or omega equations
-                    # TODO: write the turbulent production term!!
+                    #Source terms for the k, omega, u or v equations
+                    # Turbulent production term Pk
+                    Pk[m][n] = 2.0*ugradx[m][n]**2 + 2.0*vgrady[m][n]**2 + 2.0*ugrady[m][n]*vgradx[m][n] + ugrady[m][n]**2 + vgradx[m][n]**2
+
                     if flag in ['K', 'k']:
-                        SU[m][n] = 1*dx[m][n]*dy[m][n]
+                        SU[m][n] = Pk[m][n]*dx[m][n]*dy[m][n]
                         SP[m][n] = -rho*betastar*omega[m][n]
-                    else:
-                        SU[m][n] = 1*dx[m][n]*dy[m][n]
+                    elif flag in ['Omega','omega']:
+                        SU[m][n] = Pk[m][n]*cw1*omega[m][n]*dx[m][n]*dy[m][n]/k[m][n]
                         SP[m][n] = -rho * cw2 * omega[m][n]
+                    else:
+                        dPx[m][n] = -0.5 * (Interp_obj.CD_interp(Px[m][n - 1], Px[m][n + 1], dx[m][n]))
+                        SUx[m][n] = - dPx[m][n] * dx[m][n] * dy[m][n]
+                        dPy[m][n] = -0.5 * (Interp_obj.CD_interp(Px[m + 1][n], Px[m - 1][n], dy[m][n]))
+                        SUy[m][n] = - dPy[m][n] * dy[m][n] * dx[m][n]
+                        SP[m][n] = 0.0
 
-                    # Discretize convection diffusion equation (CD - FOU) -- !!!!!!!!!!!!!!!COEFFICIENTS FOR U AND V EQUATIONS!!!!!!!!!!!!
-
-        for m in range(i):  # loop through rows
-            for n in range(j):  # loop through columns
-
-                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                    #############CALCULATION OF COEFFS#############
 
                     # West faces
                     Fw[m][n] = rho * ufw[m][n]
@@ -380,15 +378,18 @@ class Discretize2(object):
                     # aP term
                     aP[m][n] = (DxW[m][n] * dy[m][n] + DxE[m][n] * dy[m][n] + DyS[m][n] * dx[m][n] + DyN[m][n] *
                                 dx[m][n]) + max(0.0, -Fw[m][n]) * dy[m][n] \
-                               + max(0.0, Fe[m][n]) * dy[m][n] + max(0.0, -Fs[m][n]) * dx[m][n] + max(0.0,
-                                                                                                      Fn[m][n]) * \
+                               + max(0.0, Fe[m][n]) * dy[m][n] + max(0.0, -Fs[m][n]) * dx[m][n] + max(0.0,Fn[m][n]) * \
                                                                                                   dx[m][n] - SP[m][n]
-
                     # Under-relaxation (due to non-linearity in PDE's
-
                     aPmod[m][n] = aP[m][n] / alpha
-                    SUmod[m][n] = SU[m][n] + (aPmod[m][n] * (1 - alpha) * u[m][n])
 
+                    if flag in ['K', 'k']:
+                        SUmod[m][n] = SU[m][n] + (aPmod[m][n] * (1 - alpha) * k[m][n])
+                    elif flag in ['Omega','omega']:
+                        SUmod[m][n] = SU[m][n] + (aPmod[m][n] * (1 - alpha) * omega[m][n])
+                    else:
+                        SUxmod[m][n] = SUx[m][n] + (aPmod[m][n] * (1 - alpha) * u[m][n])
+                        SUymod[m][n] = SUy[m][n] + (aPmod[m][n] * (1 - alpha) * v[m][n])
 
                 else:  # Boundary nodes __> These values should not be really used as they dont mean anything!!!
                     ufw[m][n] = 0.0;
@@ -401,7 +402,69 @@ class Discretize2(object):
                     Fs[m][n] = rho * vfs[m][n]
 
 
-        return aW, aE, aN, aS, aP, aPmod, SU, SUmod
+            ############### COEFFS FOR RHIE-CHOW AND Pp EQUATIONS#################################
+
+        if flag in ['u', 'U', 'v', 'V']:
+
+            for m in range(i):  # loop through rows
+                for n in range(j):  # loop through columns
+
+                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+
+                        ##COEFFS RHIE-CHOW
+
+                        # West faces
+                        aWp[m][n] = Interp_obj.lin_interp(aPmod[m][n - 1], aPmod[m][n])
+                        # East faces
+                        aEp[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n + 1])
+                        # South faces
+                        aSp[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m + 1][n])
+                        # North faces
+                        aNp[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m - 1][n])
+
+                    # HACK FOR HAVING NON ZERO VALUES AT BC NODES
+
+                    if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
+                        aEp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+
+                    if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
+                        aWp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+
+                    if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
+                        aNp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+
+                    if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
+                        aSp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+
+            # !!!!!!!!!!!!!!!COEFFICIENTS FOR Pprime EQUATION# !!!!!!!!!!!!
+
+            for m in range(i):  # loop through rows
+                for n in range(j):  # loop through columns
+
+                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                        aWpp[m][n] = (rho * dy[m][n] ** 2) / aWp[m][n]
+                        aEpp[m][n] = (rho * dy[m][n] ** 2) / aEp[m][n]
+                        aSpp[m][n] = (rho * dx[m][n] ** 2) / aSp[m][n]
+                        aNpp[m][n] = (rho * dx[m][n] ** 2) / aNp[m][n]
+
+                    if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
+                        aEpp[m][n] = 0.0
+
+                    if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
+                        aWpp[m][n] = 0.0
+
+                    if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
+                        aNpp[m][n] = 0.0
+
+                    if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
+                        aSpp[m][n] = 0.0
+
+            for m in range(i):  # loop through rows
+                for n in range(j):  # loop through columns
+                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                        aPpp[m][n] = aWpp[m][n] + aEpp[m][n] + aSpp[m][n] + aNpp[m][n]
+
+        return aW, aE, aN, aS, aWp, aEp, aNp, aSp, aP, aPmod, SUmod, SUxmod,SUymod, aWpp, aEpp, aNpp, aSpp, aPpp
 
 
 
