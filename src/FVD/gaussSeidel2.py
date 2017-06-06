@@ -62,7 +62,7 @@ class gaussSiedel2(object):
             iter += 1
             u = ugs #update u
 
-        print "Solved G-S with %i iterations"%(iter)
+        print "Solved G-S for P with %i iterations"%(iter)
         return u
 
     def gaussSeidel4u(self, u, aW, aE, aN, aS, aP, SUx, resinp, flag):
@@ -118,9 +118,16 @@ class gaussSiedel2(object):
             resHist.append((residual))
             diffs = abs(resHist[-1] - resHist[-2])
 
-            if iter > 300 :
+            if iter > 5000 :
                 break
 
-        print "Solved G-S with %i iterations"%(iter)
+        if flag in ['U', 'u']:
+            print "Solved G-S for U with %i iterations"%(iter)
+        elif flag in ['v', 'V']:
+            print "Solved G-S for V with %i iterations"%(iter)
+        elif flag in ['k', 'K']:
+            print "Solved G-S for K with %i iterations"%(iter)
+        else:
+            print "Solved G-S for omega with %i iterations"%(iter)
         return u
 

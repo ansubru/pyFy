@@ -300,9 +300,15 @@ class Discretize2(object):
 
         from Interpolate import Interpolate
         Interp_obj = Interpolate()
+        # Interpolation weights
+        fxe = IO_obj.fxe
+        fxw = IO_obj.fxw
+        fyn = IO_obj.fyn
+        fys = IO_obj.fys
 
         from solFunc import solFunc
         solFunc_obj = solFunc()
+
         ###############------------------------------------------################
         # Initialize all relevant variables:u, v, p etc.
         u = 1.0 * matU
@@ -310,7 +316,7 @@ class Discretize2(object):
         k = 1.0 * matk
         omega = 1.0 * matomega
         mut = 1.0*mutmat
-        Px = 1.0 * matP; dPx = 0.0 * matU; dPy = 0.0 * matU; Fe = 0.0 * matU; Fw = 0.0 * matU; Fn = 0.0 * matU; Fs = 0.0 * matU;
+        Px = 1.0 * matP; Fe = 0.0 * matU; Fw = 0.0 * matU; Fn = 0.0 * matU; Fs = 0.0 * matU;
 
        #Initialize all relevant co-efficients
         aP = 0.0*matU; aPmod = 0.0*matU; aW = 0.0*matU; aWp = 0.0*matU; aE = 0.0*matU; aEp= 0.0*matU; aN= 0.0*matU; aNp= 0.0*matU; aS= 0.0*matU; aSp = 0.0*matU;
@@ -323,8 +329,8 @@ class Discretize2(object):
         # Initialize face velocities
         ufe, ufw, vfn, vfs = 0.0 * u, 0.0 * u, 0.0 * u, 0.0 * u  # u face velocities at each grid node
 
-        #Calculate gradients (for u and v)
-        ugradx, ugrady, vgradx, vgrady = solFunc_obj.calcGradIW(u,v)
+        #Calculate gradients (for u, v and P)
+        ugradx, ugrady, vgradx, vgrady, Pgradx, Pgrady = solFunc_obj.calcGradIW(u,v,Px)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)
@@ -355,10 +361,10 @@ class Discretize2(object):
                         SU[m][n] = Pk[m][n]*cw1*omega[m][n]*dx[m][n]*dy[m][n]/k[m][n]
                         SP[m][n] = -rho * cw2 * omega[m][n]
                     else:
-                        dPx[m][n] = -0.5 * (Interp_obj.CD_interp(Px[m][n - 1], Px[m][n + 1], dx[m][n]))
-                        SUx[m][n] = - dPx[m][n] * dx[m][n] * dy[m][n]
-                        dPy[m][n] = -0.5 * (Interp_obj.CD_interp(Px[m + 1][n], Px[m - 1][n], dy[m][n]))
-                        SUy[m][n] = - dPy[m][n] * dy[m][n] * dx[m][n]
+                        dPx = -Pgradx[m][n]
+                        SUx[m][n] = - dPx * dx[m][n] * dy[m][n]
+                        dPy = -Pgrady[m][n]
+                        SUy[m][n] = - dPy * dy[m][n] * dx[m][n]
                         SP[m][n] = 0.0
 
                     #############CALCULATION OF COEFFS#############
@@ -414,13 +420,13 @@ class Discretize2(object):
                         ##COEFFS RHIE-CHOW
 
                         # West faces
-                        aWp[m][n] = Interp_obj.lin_interp(aPmod[m][n - 1], aPmod[m][n])
+                        aWp[m][n] = Interp_obj.weighted_interp(aPmod[m][n], aPmod[m][n - 1], fxw[m][n])
                         # East faces
-                        aEp[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m][n + 1])
+                        aEp[m][n] = Interp_obj.weighted_interp(aPmod[m][n], aPmod[m][n + 1], fxe[m][n])
                         # South faces
-                        aSp[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m + 1][n])
+                        aSp[m][n] = Interp_obj.weighted_interp(aPmod[m][n], aPmod[m + 1][n], fys[m][n])
                         # North faces
-                        aNp[m][n] = Interp_obj.lin_interp(aPmod[m][n], aPmod[m - 1][n])
+                        aNp[m][n] = Interp_obj.weighted_interp(aPmod[m][n], aPmod[m - 1][n], fyn[m][n])
 
                     # HACK FOR HAVING NON ZERO VALUES AT BC NODES
 

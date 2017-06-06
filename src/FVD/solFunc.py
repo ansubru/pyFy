@@ -270,7 +270,7 @@ class solFunc(object):
                     b[m][n] = mdotw[m][n] - mdote[m][n] + mdots[m][n] - mdotn[m][n]
         return b
 
-    def calcGradIW(self, u, v):
+    def calcGradIW(self, u, v, P):
         """A function to calc the gradients of velocity at E, W, N and S faces using interpolation weights"""
         from IO import IO
         IO_obj = IO("random")
@@ -288,6 +288,7 @@ class solFunc(object):
         i = np.size(u, 0)
         j = np.size(u, 1)
         ugradx, ugrady = 0.0 * u, 0.0 * u
+        Pgradx, Pgrady = 0.0 * u, 0.0 * u
         vgradx, vgrady = 0.0 * u, 0.0 * u
 
         for m in range(i):  # loop through rows
@@ -295,20 +296,29 @@ class solFunc(object):
 
                 if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
                     uw = Interp_obj.weighted_interp(u[m][n], u[m][n - 1], fxw[m][n])   # West face
+                    pw = Interp_obj.weighted_interp(P[m][n], P[m][n - 1], fxw[m][n])   # West face
+
                     ue = Interp_obj.weighted_interp(u[m][n], u[m][n + 1], fxe[m][n])   # East face
+                    pe = Interp_obj.weighted_interp(P[m][n], P[m][n + 1], fxe[m][n])   # East face
+
                     un = Interp_obj.weighted_interp(u[m][n], u[m - 1][n], fyn[m][n])   # North face
-                    us = Interp_obj.weighted_interp(u[m][n], u[m + 1][n], fyn[m][n])   # South face
+                    pn = Interp_obj.weighted_interp(P[m][n], P[m - 1][n], fyn[m][n])   # North face
+
+                    us = Interp_obj.weighted_interp(u[m][n], u[m + 1][n], fys[m][n])   # South face
+                    ps = Interp_obj.weighted_interp(P[m][n], P[m + 1][n], fys[m][n])   # South face
 
                     ugradx[m][n] = Interp_obj.CD_interp(uw, ue, dx[m][n])
                     ugrady[m][n] = Interp_obj.CD_interp(us, un, dy[m][n])
+                    Pgradx[m][n] = Interp_obj.CD_interp(pw, pe, dx[m][n])
+                    Pgrady[m][n] = Interp_obj.CD_interp(ps, pn, dy[m][n])
 
                     vw = Interp_obj.weighted_interp(v[m][n], v[m][n - 1], fxw[m][n])   # West face
                     ve = Interp_obj.weighted_interp(v[m][n], v[m][n + 1], fxe[m][n])   # East face
                     vn = Interp_obj.weighted_interp(v[m][n], v[m - 1][n], fyn[m][n])   # North face
-                    vs = Interp_obj.weighted_interp(v[m][n], v[m + 1][n], fyn[m][n])   # South face
+                    vs = Interp_obj.weighted_interp(v[m][n], v[m + 1][n], fys[m][n])   # South face
 
                     vgradx[m][n] = Interp_obj.CD_interp(vw, ve, dx[m][n])
                     vgrady[m][n] = Interp_obj.CD_interp(vs, vn, dy[m][n])
 
-        return  ugradx, ugrady, vgradx, vgrady
+        return  ugradx, ugrady, vgradx, vgrady, Pgradx, Pgrady
 

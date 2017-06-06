@@ -94,8 +94,8 @@ caseType = "Turbulent"
 ############################################################### Controls for iterations ###################################################################################################################
 
 iters = 20 #number of gauss seidel sweeps
-resInp = 1e-6 #residual for gauss seidel
-residual = 1e-4 #residual for equations
+resInp = 1e-5 #residual for gauss seidel
+residual = 1e-5 #residual for equations
 interinp = 50 #number of outer iterations
 
 ################################################################################### SOLVER ##################################################################################################################
@@ -107,9 +107,13 @@ interinp = 50 #number of outer iterations
     # --> Returns face values of flux and velocities along with A and b matrices
 while (outerIters < interinp):
     mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev = mdotw, mdote, mdotn, mdots #mdot from previous iteration
+    mutPrev = mut
     outerIters += 1
+
     print "Solving iteration %i"%(outerIters)
-    aW, aE, aN, aS, aWp, aEp, aNp, aSp, aP, aPmod, SUmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2( U, V, k, omega, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , mut, P, 'U')
+    aW, aE, aN, aS, aWp, aEp, aNp, aSp, aP, aPmod, SUmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2( U, V, k, omega, mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev , mutPrev, P, 'U')
+
+
 
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
@@ -140,8 +144,9 @@ while (outerIters < interinp):
 
     #Step 3b #Solve P' using co-eff for Pprime equation
 
-    resInpPP = 1e-6
-    Pprime = gs_obj.gaussSeidel4u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, resInpPP, "P")
+    resInpPP = 1e-10
+    itersSpcl = 1000
+    Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl)
 
     #Step 4 : Set pressure based on value at cell (2,2)
     #Set P' level
@@ -197,6 +202,7 @@ while (outerIters < interinp):
     k = kNew
     omega = omegaNew
     mut, muts = solFunc_obj.calcMuts(k, omega)
+
 #
 # # #Plot residuals
 
