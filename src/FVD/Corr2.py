@@ -122,6 +122,82 @@ class Corr2(object):
 
         return mdoteNew, mdotnNew
 
+    def velcorrTurb(self,matU,matV, matPP, aPu):
+        """A function that corrects velocity by pressure straddling (aPu is coeff of Pprime equation) for turbulent cases
+           Note! the face pressures are replaced by grid pressures (W, E, N, S): as pw - pe = fxw*PW + (1-fxw)PP - fxe*PE - (1-fxe)PP
+        """
+        u = 1.0*matU
+        v= 1.0*matV
+        PP = 1.0*matPP
+        aP = 1.0 * aPu
+        ###############------------CREATE IO OBJECT--------------################
+
+        from IO import IO
+        IO_obj = IO("random")
+        dx = IO_obj.dx # x-grid spacing
+        dy = IO_obj.dy # y-grid spacing
+        # Interpolation weights
+        fxe = IO_obj.fxe
+        fxw = IO_obj.fxw
+        fyn = IO_obj.fyn
+        fys = IO_obj.fys
+
+        from Interpolate import Interpolate
+        Interp_obj = Interpolate()
+
+        # Boundary conditions
+        uA = IO_obj.UA
+        uB = IO_obj.UB
+        uC = IO_obj.UC
+        uD = IO_obj.UD
+        vA = IO_obj.VA
+        vB = IO_obj.VB
+        vC = IO_obj.VC
+        vD = IO_obj.VD
+
+        i = np.size(u, 0)
+        j = np.size(v, 1)
+
+        ppW, ppE,ppN, ppS, uPfinal,vPfinal  = 0.0*matPP, 0.0*matPP, 0.0*matU, 0.0*matU, 0.0*matU, 0.0*matU
+
+        for m in range(i):  # loop through rows
+            for n in range(j):  # loop through columns
+
+                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+
+                    ppW = PP[m][n-1]
+                    ppE = PP[m][n+1]
+                    ppS = PP[m+1][n]
+                    ppN = PP[m-1][n]
+                    ppP = PP[m][n]
+
+                    ppw = Interp_obj.weighted_interp(ppP, ppW, fxw[m][n])
+                    ppe = Interp_obj.weighted_interp(ppP, ppE, fxe[m][n])
+                    pps = Interp_obj.weighted_interp(ppP, ppS, fys[m][n])
+                    ppn = Interp_obj.weighted_interp(ppP, ppN, fyn[m][n])
+
+                    uPfinal[m][n] = u[m][n] + (dy[m][n] * (ppw - ppe) / (aP[m][n]))
+                    vPfinal[m][n] = v[m][n] + (dx[m][n] * (pps - ppn) / (aP[m][n]))
+
+            # PAD BCS
+        # Apply bcs U and V
+        for m in range(0, j):
+            for n in range(0, i):
+                if (m >= 0 and n == 0):  # A Boundary
+                    uPfinal[m][n] = uA  # pad bc velocities
+                    vPfinal[m][n] = vA  # pad bc velocities
+                if (m >= 0 and n == j - 1):  # C Boundary
+                    uPfinal[m][n] = uC  # pad bc velocities
+                    vPfinal[m][n] = vC  # pad bc velocities
+                if (m == i - 1 and n != j - 1 and n != 0):  # D Boundary
+                    uPfinal[m][n] = uD  # pad bc velocities
+                    vPfinal[m][n] = vD  # pad bc velocities
+                if (m == 0 and n != j - 1 and n != 0):  # B Boundary
+                    uPfinal[m][n] = uB  # pad bc velocities
+                    vPfinal[m][n] = vB  # pad bc velocities
+
+        return uPfinal, vPfinal
+
 
 
 

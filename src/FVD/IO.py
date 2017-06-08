@@ -238,19 +238,14 @@ class IO(object):
                     else:
                         y= domainSize[1]
                 else:
-                    #TODO: rotate grid
                     if n==0:
                         x = 0
-                    elif n<j-2:
-                        x=dx[m][n]*0.5 + xpt[m][n-1]
-                    elif n==j-2:
-                        x=domainSize[0] - dx[m][n]*0.5
+                    elif n == j-1:
+                        x= domainSize[1]
                     else:
-                        x= domainSize[0]
+                        grid_x[m][n] = xpt[m][n] - (0.5*dx[m][n])
 
-                grid_x[m][n] = x
-
-        grid_y = np.transpose(grid_x)
+        grid_y = 1-np.transpose(grid_x)
 
 
 ############################################################################################################################################################################################################

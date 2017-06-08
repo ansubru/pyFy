@@ -42,10 +42,9 @@ class calcResiduals(object):
 
         Rvar = 0
 
-        for m in range(i):  # loop through rows
-            for n in range(j):  # loop through columns
+        for m in range(1,i-1):  # loop through rows
+            for n in range(1,j-1):  # loop through columns
 
-                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
                     sumvar = aE[m][n]*var[m][n+1] + aW[m][n]*var[m][n-1] + aN[m][n]*var[m-1][n] + aS[m][n]*var[m+1][n] + SU[m][n] -aP[m][n]*var[m][n]
                     Rvar = Rvar + abs(sumvar)
 
@@ -59,11 +58,26 @@ class calcResiduals(object):
 
         Rvar = 0
 
-        for m in range(i):  # loop through rows
-            for n in range(j):  # loop through columns
+        for m in range(2,i-2):  # loop through rows
+            for n in range(2,j-2):  # loop through columns
 
-                if (m != 0 and n != 0 and m != 1 and n != 1 and m != (i - 1) and n != (j - 1) and m != (i - 2) and n != (j - 2)):  # special only for omega:
-                    sumvar = aE[m][n]*var[m][n+1] + aW[m][n]*var[m][n-1] + aN[m][n]*var[m-1][n] + aS[m][n]*var[m+1][n] + SU[m][n] -aP[m][n]*var[m][n]
+                    sumvar = aE[m][n]*var[m][n+1] + aW[m][n]*var[m][n-1] + aN[m][n]*var[m-1][n] + aS[m][n]*var[m+1][n] + SU[m][n] - aP[m][n]*var[m][n]
                     Rvar = Rvar + abs(sumvar)
 
+        return (Rvar)
+
+    def calcResB(self, B):
+        """Function to calculate residuals given B"""
+
+        i = np.size(B, 0)
+        j = np.size(B, 1)
+
+        Rvar = 0
+
+        for m in range(1,i-1):  # loop through rows
+            for n in range(1,j-1):  # loop through columns
+
+                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+                    sumvar = B[m][n]
+                    Rvar = Rvar + abs(sumvar)
         return (Rvar)

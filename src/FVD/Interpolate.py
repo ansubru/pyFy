@@ -42,7 +42,7 @@ class Interpolate(object):
 
     def weighted_interp(self,NP,NB,f):
         """Function that performs interpolation based on provided interpolation weights"""
-        WTinterp = f*NB + (1-f)*NP
+        WTinterp = (f*NB) + ((1.0-f)*NP)
         return WTinterp
 
 ##############################################################################################################################################################################################################

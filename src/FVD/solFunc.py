@@ -71,17 +71,17 @@ class solFunc(object):
         for m in range(0, j):
             for n in range(0, i):
 
-                if (m > 0 and m < i - 1 and n == j - 2 or n == 1):  # Boundary face WEST and EAST first grid nodes
+                if (m > 0 and m <= i - 1 and n == j - 2):  # Boundary face WEST and EAST first grid nodes
                     omegabc[m][n] = 6*nu/(cw2*delXW[1][1]**2) # all first grid nodes are delXW[1][1] away from the walls
 
-                elif (m == 1 or m== i-2 and n > 0 and n < j - 1):  # Boundary face NORTH and SOUTH first grid nodes
+                elif (m > 0 and m <= i - 1 and n == 1):  # Boundary face WEST and EAST first grid nodes
+                    omegabc[m][n] = 6*nu/(cw2*delXW[1][1]**2) # all first grid nodes are delXW[1][1] away from the walls
+
+                elif (m == 1 and n >= 0 and n <= j - 1):  # Boundary face NORTH and SOUTH first grid nodes
                     omegabc[m][n] = 6*nu/(cw2*delXW[1][1]**2)  # all first grid nodes are delXW[1][1] away from the walls
 
-                elif (m > 0 and m < i - 1 and n == j - 1 or n == 0):
-                    omegabc[m][n] = 1  # some random value of omega for wall (not used at all)
-
-                elif (m == 0 or m== i-1 and n > 0 and n < j - 1):  # Boundary face NORTH and SOUTH first grid nodes
-                    omegabc[m][n] = 1  # some random value of omega for wall (not used at all)
+                elif (m == i-2 and n >= 0 and n <= j - 1):  # Boundary face NORTH and SOUTH first grid nodes
+                    omegabc[m][n] = 6 * nu / (cw2 * delXW[1][1] ** 2)  # all first grid nodes are delXW[1][1] away from the walls
 
                 else:
                     omegabc[m][n] = omegainit
@@ -307,8 +307,8 @@ class solFunc(object):
                     us = Interp_obj.weighted_interp(u[m][n], u[m + 1][n], fys[m][n])   # South face
                     ps = Interp_obj.weighted_interp(P[m][n], P[m + 1][n], fys[m][n])   # South face
 
-                    ugradx[m][n] = Interp_obj.CD_interp(uw, ue, dx[m][n])
-                    ugrady[m][n] = Interp_obj.CD_interp(us, un, dy[m][n])
+                    ugradx[m][n] = -Interp_obj.CD_interp(ue, uw, dx[m][n])
+                    ugrady[m][n] = -Interp_obj.CD_interp(un, us, dy[m][n])
                     Pgradx[m][n] = Interp_obj.CD_interp(pw, pe, dx[m][n])
                     Pgrady[m][n] = Interp_obj.CD_interp(ps, pn, dy[m][n])
 
@@ -317,8 +317,8 @@ class solFunc(object):
                     vn = Interp_obj.weighted_interp(v[m][n], v[m - 1][n], fyn[m][n])   # North face
                     vs = Interp_obj.weighted_interp(v[m][n], v[m + 1][n], fys[m][n])   # South face
 
-                    vgradx[m][n] = Interp_obj.CD_interp(vw, ve, dx[m][n])
-                    vgrady[m][n] = Interp_obj.CD_interp(vs, vn, dy[m][n])
+                    vgradx[m][n] = -Interp_obj.CD_interp(ve, vw, dx[m][n])
+                    vgrady[m][n] = -Interp_obj.CD_interp(vn, vs, dy[m][n])
 
         return  ugradx, ugrady, vgradx, vgrady, Pgradx, Pgrady
 

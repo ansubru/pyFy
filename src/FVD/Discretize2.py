@@ -335,6 +335,7 @@ class Discretize2(object):
         i = np.size(matU, 0)
         j = np.size(matU, 1)
 
+
         for m in range(0, j):
             for n in range(0, i):
                 if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
@@ -344,7 +345,7 @@ class Discretize2(object):
                     DyN[m][n] = (mu + mut[m][n]) / delYN[m][n]
                     DyS[m][n] = (mu + mut[m][n]) / delYS[m][n]
 
-                    #Face velocities
+          #Face velocities
                     ufw[m][n] = mdotw[m][n] / (rho * dy[m][n])  # West face
                     ufe[m][n] = mdote[m][n] / (rho * dy[m][n])  # East face
                     vfn[m][n] = mdotn[m][n] / (rho * dx[m][n])  # North face
@@ -352,14 +353,14 @@ class Discretize2(object):
 
                     #Source terms for the k, omega, u or v equations
                     # Turbulent production term Pk
-                    Pk[m][n] = 2.0*ugradx[m][n]**2 + 2.0*vgrady[m][n]**2 + 2.0*ugrady[m][n]*vgradx[m][n] + ugrady[m][n]**2 + vgradx[m][n]**2
+                    Pk[m][n] = (2.0*ugradx[m][n]**2 + 2.0*vgrady[m][n]**2 + (2.0*ugrady[m][n]*vgradx[m][n]) + ugrady[m][n]**2 + vgradx[m][n]**2)*mut[m][n]
 
                     if flag in ['K', 'k']:
                         SU[m][n] = Pk[m][n]*dx[m][n]*dy[m][n]
-                        SP[m][n] = -rho*betastar*omega[m][n]
+                        SP[m][n] = -rho*betastar*omega[m][n]* dx[m][n]* dy[m][n]
                     elif flag in ['Omega','omega']:
-                        SU[m][n] = Pk[m][n]*cw1*omega[m][n]*dx[m][n]*dy[m][n]/k[m][n]
-                        SP[m][n] = -rho * cw2 * omega[m][n]
+                        SU[m][n] = (Pk[m][n]*cw1*omega[m][n]*dx[m][n]*dy[m][n])/k[m][n]
+                        SP[m][n] = -rho * cw2 * omega[m][n]* dx[m][n]* dy[m][n]
                     else:
                         dPx = -Pgradx[m][n]
                         SUx[m][n] = - dPx * dx[m][n] * dy[m][n]
@@ -469,6 +470,7 @@ class Discretize2(object):
                 for n in range(j):  # loop through columns
                     if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
                         aPpp[m][n] = aWpp[m][n] + aEpp[m][n] + aSpp[m][n] + aNpp[m][n]
+
 
         return aW, aE, aN, aS, aWp, aEp, aNp, aSp, aP, aPmod, SUmod, SUxmod,SUymod, aWpp, aEpp, aNpp, aSpp, aPpp
 

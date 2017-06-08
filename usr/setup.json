@@ -4,7 +4,7 @@
         "yNodes":64,
         "gridType":"Non-Equidistant",
         "growthRatio":1.15,
-        "viscosity":0.000001,
+        "viscosity":0.00001,
         "rho":1.0,
         "boundary-velocity":[1.0,0.0],
         "A-bound":"walls",

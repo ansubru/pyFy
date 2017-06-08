@@ -38,7 +38,7 @@ class rhieChow2(object):
 
 
  ###----------------------------------------------------------------------------RELEVANT FUNCTION DEFINITIONS-----------------------------------------------------------------------------------------------###
-    def rcInterp2(self, matU, matV, mdotw, mdote, mdotn, mdots, matP, matk, matomega, matmut, flag):
+    def rcInterp2(self, matU, matV, mdotw, mdote, mdotn, mdots, matP, matk, matomega, matmut, flag, flag2):
         """A function that provides necessary corrections for face mass fluxes"""
 
         def rhicE(PEE, PE, PP, PW):
@@ -51,10 +51,10 @@ class rhieChow2(object):
 
         u = 1.0*matU
         v = 1.0*matV
-        Px = 1*matP
-        k = 1*matk
-        omega = 1*matomega
-        mut = 1*matmut
+        Px = 1.0*matP
+        k = 1.0*matk
+        omega = 1.0*matomega
+        mut = 1.0*matmut
 
         #Get BC's
         from IO import IO
@@ -69,7 +69,10 @@ class rhieChow2(object):
         from Discretize2 import Discretize2
         disc_obj2 = Discretize2()
 
-        aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2(u, v, k, omega, mdotw, mdote, mdotn, mdots, mut, Px, flag)
+        if flag2 in ['Turbulent']:
+            aW, aE, aN, aS, aWw, aEe, aNn, aSs, aP, aPmod, SUmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_discTurb2(u, v, k, omega, mdotw, mdote, mdotn, mdots, mut, Px, flag)
+        else:
+            aW, aE, aN, aS, aWp, aEe, aNn, aSs, aP, aPmod, SUxmod, SUymod, aWpp, aEpp, aNpp, aSpp, aPpp = disc_obj2.FOU_disc2(u, v,mdotw, mdote, mdotn, mdots, Px)
 
         i = np.size(matU, 0)
         j = np.size(matU, 1)
