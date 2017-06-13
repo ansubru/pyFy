@@ -11,13 +11,9 @@ __email__ = "ansubru@gmail.com"
 """
 ################################################################################ TURBULENT FLOW SOLVER ################################################################################################
 
-import os
-import numpy as np
-import re
-import sys
-import IO
-import Interpolate
-import pprint
+import time
+import math
+import pylab
 
 from Discretize2 import Discretize2
 disc_obj2 = Discretize2()
@@ -74,7 +70,7 @@ mut = 0.0*grid
 muts = 0.0*grid
 mdotw, mdote, mdotn, mdots  = 0.0*grid, 0.0*grid, 0.0*grid, 0.0*grid
 resU, resV, resP, resB = 1.0 ,1.0 ,1.0 , 1.0
-resplotU, resplotV, resplotk, resplotomg, resplotB = [1.0] ,[1.0],[1.0] ,[1.0], [1.0]
+resplotU, resplotV, resplotk, resplotomg, resplotB, resplotPP = [1.0] ,[1.0],[1.0] ,[1.0], [1.0], [1.0]
 outerIters = 0
 eps = 1
 #Apply BCs
@@ -89,17 +85,20 @@ omegain = solFunc_obj.initializeOmega(omegainit)
 omega = solFunc_obj.setPsetbcs(omegain)
 #Initialize turbulent viscosity
 mut, muts = 0.0*grid, 0.0*grid
+#Timing simulations
+start = time.clock()
+#Plot output display control
+n = 1 #plots displayed at multiples of n iterations
 ########################################################################################################################################################################################################
 
 caseType = "Turbulent"
 
 ############################################################### Controls for iterations ###################################################################################################################
 
-iters = 20 #number of gauss seidel sweeps
-resInp = 1e-10 #residual for gauss seidel
-residual = 1e-5 #residual for equations
-interinp = 5 #number of outer iterations
-
+iters = 100 #number of gauss seidel sweeps
+resInp = 1e-6 #residual for gauss seidel (internal residual for GS sweeps)
+residual = 1e-5 #residual for all equations (convergence criteria)
+interinp = 10000 #number of outer iterations
 ################################################################################### SOLVER ##################################################################################################################
 
     #Step 1 : Solve for U,V using interpolated pressure using Discretize class obj
@@ -107,6 +106,7 @@ interinp = 5 #number of outer iterations
     # --> Calculates co-eff aP, aW, aW, aN, aS, and Sources
     # --> Implicit under-relaxation due to non-linearity in pde's
     # --> Returns face values of flux and velocities along with A and b matrices
+#while (eps > residual):
 while (outerIters < interinp):
     mdotwPrev, mdotePrev, mdotnPrev, mdotsPrev = mdotw, mdote, mdotn, mdots #mdot from previous iteration
     mutPrev = mut
@@ -117,13 +117,13 @@ while (outerIters < interinp):
 
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
-    Ustar = gs_obj.gaussSeidel4u(U, aW, aE, aN, aS, aPmod,SUxmod, resInp, "U")
-    #Ustar = gs_obj.gaussSeidel3u(U, aW, aE, aN, aS, aPmod, SUxmod, iters)
+    #Ustar1 = gs_obj.gaussSeidel6u(U, aW, aE, aN, aS, aPmod,SUxmod, iters, "U")
+    Ustar = gs_obj.gaussSeidel3u(U, aW, aE, aN, aS, aPmod, SUxmod, iters, "U")
 
     # #Step 1b : Solve for V using gauss seidel method
     # # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
-    Vstar = gs_obj.gaussSeidel4u(V, aW, aE, aN, aS, aPmod,SUymod, resInp, "V")
-    #Vstar = gs_obj.gaussSeidel3u(V, aW, aE, aN, aS, aPmod, SUymod, iters)
+    #Vstar = gs_obj.gaussSeidel6u(V, aW, aE, aN, aS, aPmod,SUymod, iters, "V")
+    Vstar = gs_obj.gaussSeidel3u(V, aW, aE, aN, aS, aPmod, SUymod, iters, "V")
 
     #Step 2 : RHIE-CHOW INTERPOLATION
     # --> correct face velocities (EAST AND NORTH FACES ALONE)
@@ -134,7 +134,6 @@ while (outerIters < interinp):
     mstare, mstarn =  solFunc_obj.calcFaceMassFluxIW(Ustar,Vstar) # --> Get east and north face mass fluxes for Ustar and Vstar (INTERPOLATION WEIGHTED)
     mdote,mdotn = solFunc_obj.correctFaceMassFlux(mstare,mstarn,pcorre,pcorrn) # --> Correct with rhie-chow to get corrected mdote and motn
     mdotw, mdots = solFunc_obj.getFaceMassFluxWS(mdote,mdotn) #--> Get corrected mdotw and mdots
-
 
     #Step 3 : Solve P' equation using U velocities
     # --> Calculates co-eff aP, aW, aW, aN, aS, at faces
@@ -147,9 +146,9 @@ while (outerIters < interinp):
     #Step 3b #Solve P' using co-eff for Pprime equation
 
     resInpPP = 1e-10
-    itersSpcl = 300
-    #Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl)
-    Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl)
+    itersSpcl = 6000
+    #Pprime1 = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl, "P")
+    Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl, "Pprime")
 
     #Step 4 : Set pressure based on value at cell (2,2)
     #Set P' level
@@ -162,9 +161,7 @@ while (outerIters < interinp):
     # #Step 5 : Pressure straddling
 
     mdoteNew, mdotnNew = corr_obj.massFluxcorr(Pset,mdote, mdotn, aEpp, aNpp)
-
     mdotwNew, mdotsNew = solFunc_obj.getFaceMassFluxWS(mdoteNew, mdotnNew)  # --> Get new mdotw and mdots
-
     uNew, vNew = corr_obj.velcorrTurb(Ustar,Vstar,Pset, aPmod) # --> Correct u and v velcoities
 
 
@@ -178,8 +175,8 @@ while (outerIters < interinp):
 
     # #Step 8a : Solve for k using gauss seidel method
     # # --> Returns newk which will be used to solve for omega
-    kNew = gs_obj.gaussSeidel4u(k, aWk, aEk, aNk, aSk, aPmodk,SUmodk, resInp, "k")
-    #kNew = gs_obj.gaussSeidel3u(k, aWk, aEk, aNk, aSk, aPmodk, SUmodk, iters)
+    #kNew1 = gs_obj.gaussSeidel6u(k, aWk, aEk, aNk, aSk, aPmodk,SUmodk, iters, "k")
+    kNew = gs_obj.gaussSeidel3u(k, aWk, aEk, aNk, aSk, aPmodk, SUmodk, iters, "k")
 
     ## Step 9 : Solve omega equation
     ## update turbulent viscosity with kNew
@@ -187,23 +184,33 @@ while (outerIters < interinp):
     aWomg, aEomg, aNomg, aSomg, aWpo, aEpo, aNpo, aSpo, aPomg, aPmodomg, SUmodomg, SUxmodo, SUymodo, aWppo, aEppo, aNppo, aSppo, aPppo \
         = disc_obj2.FOU_discTurb2(uNew, vNew, kNew, omega, mdotwNew, mdoteNew, mdotnNew, mdotsNew, mutskNew, P, "omega")
 
-    omegaNew = gs_obj.gaussSeidel4u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg,SUmodomg, resInp, "omega")
-    #omegaNew = gs_obj.gaussSeidel3u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg, SUmodomg, iters)
+    #omegaNew = gs_obj.gaussSeidel4u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg,SUmodomg, resInp, "omega")
+    #omegaNew1 = gs_obj.gaussSeidel6u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg, SUmodomg, iters, "omega")
+    omegaNew = gs_obj.gaussSeidel3u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg, SUmodomg, iters, "omega")
 #
-#     #Step 10 : Calculate residual
-    resU = res_obj.calcRes(U,  aW, aE, aN, aS, SUxmod, aPmod)
-    resV = res_obj.calcRes(V,  aW, aE, aN, aS, SUymod, aPmod)
-    resK = res_obj.calcRes(k,  aWk, aEk, aNk, aSk, SUmodk, aPmodk)
-    resomg = res_obj.calcResomg(omega, aWomg, aEomg, aNomg, aSomg, SUmodomg, aPmodomg)
-
+#   #Step 10 : Calculate residual
+    resU = res_obj.calcRes(U,  aW, aE, aN, aS, SUxmod, aPmod, b, "U")
+    resV = res_obj.calcRes(V,  aW, aE, aN, aS, SUymod, aPmod, b, "V")
+    resK = res_obj.calcRes(k,  aWk, aEk, aNk, aSk, SUmodk, aPmodk, b, "K")
+    resPP = res_obj.calcRes(Pset, aWpp, aEpp, aNpp, aSpp,  b, aPpp, b, "PP")
+    resomg = res_obj.calcRes(omega, aWomg, aEomg, aNomg, aSomg, SUmodomg, aPmodomg, b, "omega")
     resB = res_obj.calcResB(b)
-    eps = max(resU, resV, resK, resomg, resB)
+
+    eps = max(resU, resV, resK, resomg, resB, resPP) # max residual for the run
+
+    if eps > 1e5:
+        print ("*#!%&*!%/*%/*!¤%&    F***K!! WE DIVERGED :( ...     *#!%&*!%/*%/*!¤%&")
+        break
+
     resplotU.append(resU)
     resplotV.append(resV)
     resplotk.append(resK)
+    resplotPP.append(resPP)
     resplotomg.append(resomg)
     resplotB.append(resB)
-    print ("Ures: %e, Vres: %e, kres: %e, omegares: %e, Continuity: %e"%(resU, resV, resK, resomg, resB))
+    elapsed = (time.clock() - start)
+    print ("Ures: %e, Vres: %e, PPres: %e, kres: %e, omegares: %e, Continuity: %e, maxRes(eps): %e"%(resU, resV, resPP, resK, resomg, resB, eps))
+    print ("%d seconds elapsed (Execution time)"%(elapsed))
 #
     #Replace U,V, mdotw, mdote, mdotn, mdots,P, mut, k, omega
     U = uNew
@@ -214,6 +221,7 @@ while (outerIters < interinp):
     omega = omegaNew
     mut, muts = solFunc_obj.calcMuts(k, omega)
 
-# # #Plots
-plt_obj.plotdataTurb(U, V, k, omega, ypt, mut, resplotU, resplotV, resplotk, resplotomg, resplotB, outerIters)
+# # #Plots at simulation end
+print ("***!!***!!***!!***!!***!!***    HOUSTON!! WE HAVE CONVERGED :D ...     ***!!***!!***!!***!!***!!***")
+plt_obj.plotdataTurb(U, V, k, omega, ypt, mut, resplotU, resplotV, resplotk, resplotomg, resplotB, resplotPP, outerIters)
 

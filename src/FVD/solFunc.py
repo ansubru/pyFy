@@ -307,8 +307,8 @@ class solFunc(object):
                     us = Interp_obj.weighted_interp(u[m][n], u[m + 1][n], fys[m][n])   # South face
                     ps = Interp_obj.weighted_interp(P[m][n], P[m + 1][n], fys[m][n])   # South face
 
-                    ugradx[m][n] = -Interp_obj.CD_interp(ue, uw, dx[m][n])
-                    ugrady[m][n] = -Interp_obj.CD_interp(un, us, dy[m][n])
+                    ugradx[m][n] = Interp_obj.CD_interp(ue, uw, dx[m][n])
+                    ugrady[m][n] = Interp_obj.CD_interp(un, us, dy[m][n])
                     Pgradx[m][n] = Interp_obj.CD_interp(pw, pe, dx[m][n])
                     Pgrady[m][n] = Interp_obj.CD_interp(ps, pn, dy[m][n])
 
@@ -317,8 +317,8 @@ class solFunc(object):
                     vn = Interp_obj.weighted_interp(v[m][n], v[m - 1][n], fyn[m][n])   # North face
                     vs = Interp_obj.weighted_interp(v[m][n], v[m + 1][n], fys[m][n])   # South face
 
-                    vgradx[m][n] = -Interp_obj.CD_interp(ve, vw, dx[m][n])
-                    vgrady[m][n] = -Interp_obj.CD_interp(vn, vs, dy[m][n])
+                    vgradx[m][n] = Interp_obj.CD_interp(ve, vw, dx[m][n])
+                    vgrady[m][n] = Interp_obj.CD_interp(vn, vs, dy[m][n])
 
         return  ugradx, ugrady, vgradx, vgrady, Pgradx, Pgrady
 

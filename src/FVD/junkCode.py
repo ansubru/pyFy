@@ -404,3 +404,35 @@ if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid
     coeff1n = rhicN(PNN, PN, PP, PS)  # Pn = Pp (zero gradient bc)
     coeff2n = (dx[m][n] ** 2) * rho / (4.0 * aNn[m][n])
     pcorrn[m][n] = coeff1n / coeff2n
+
+
+for i in range(1, nx-1):
+       for j in range(1, ny-1):
+           tmp = u[i,j]
+           u[i,j] = ((u[i-1, j] + u[i+1, j])*dy2 +
+                    (u[i, j-1] + u[i, j+1])*dx2)*dnr_inv
+           diff = u[i,j] - tmp
+                   err += diff*diff
+
+
+# The actual iteration
+           u[1:-1, 1:-1] = ((u[0:-2, 1:-1] + u[2:, 1:-1])*dy2 +
+                            (u[1:-1,0:-2] + u[1:-1, 2:])*dx2)*dnr_inv
+
+
+
+
+#
+for m in range(i):  # loop through rows
+    for n in range(j):  # loop through columns
+        if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes:
+
+            uN = u[m - 1][n]
+            uS = u[m + 1][n]
+            uE = u[m][n + 1]
+            uW = u[m][n - 1]
+
+            u[1:-1, 1:-1] = (u[1:-1,0:-2] * aW[1:-1, 1:-1] + u[1:-1, 2:] * aE[1:-1, 1:-1] +  u[2:, 1:-1] * aS[1:-1, 1:-1] + \
+                             u[0:-2, 1:-1] * aN[1:-1, 1:-1] + SUx[1:-1, 1:-1]) / aP[1:-1, 1:-1]
+            sumRes = sumRes + (uW * aW[m][n] + uE * aE[m][n] + uS * aS[m][n] + \
+                               uN * aN[m][n] + SUx[m][n]) - u[m][n] * aP[m][n]

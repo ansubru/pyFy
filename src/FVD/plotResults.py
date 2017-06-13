@@ -19,6 +19,7 @@ import IO
 import Interpolate
 import pprint
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import draw, figure, show
 import pylab
 
 
@@ -129,7 +130,7 @@ class plotResults(object):
                 grid_y[n][m] = 1 - y
         return grid_x, grid_y
 
-    def plotdataTurb(self, U, V, k, omega, Y, mut, resU, resV, resK, resomega, resB, it):
+    def plotdataTurb(self, U, V, k, omega, Y, mut, resU, resV, resK, resomega, resB, resPP, it):
 
         i = np.size(U, 0)
         j = np.size(V, 1)
@@ -209,6 +210,7 @@ class plotResults(object):
         pylab.subplot(236)
         pylab.semilogy(iter[1:-1], resU[1:-1], 'blue', label='U-velocity')
         pylab.semilogy(iter[1:-1], resV[1:-1], 'black', label='V-velocity')
+        pylab.semilogy(iter[1:-1], resPP[1:-1], 'magenta', label='Pprime')
         pylab.semilogy(iter[1:-1], resK[1:-1], 'red', label='k')
         pylab.semilogy(iter[1:-1], resomega[1:-1], 'green', label='omega')
         pylab.semilogy(iter[1:-1], resB[1:-1], 'cyan', label='continuity')
@@ -216,6 +218,14 @@ class plotResults(object):
         pylab.ylabel('Residual')
         pylab.grid(True)
         pylab.grid(which='both')
+        pylab.show()
+
+        pylab.figure
+        pylab.plot(LarsData[:, 4], LarsData[:, 2], 'ro', label='lada omega')
+        pylab.plot(omegaplot[0:-1], y[0:-1], 'k.', label='my omega')
+        pylab.ylabel('y [m]')
+        pylab.xlabel('Turbulent dissipation rate [1/s]')
+        pylab.xlim(0, 10)
         pylab.legend(loc='upper right')
         pylab.show()
 
@@ -231,7 +241,7 @@ class plotResults(object):
         y = []
         Uplot = []
         Vplot = []
-        iter = list(range(1, it + 2))
+        iter = list(range(1, it + 1))
         from IO import IO
         IO_obj = IO("random")
         fxe = IO_obj.fxe

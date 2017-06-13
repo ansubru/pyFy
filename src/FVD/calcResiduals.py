@@ -34,21 +34,20 @@ class calcResiduals(object):
     def __init__(self):
         """Return object"""
 
-    def calcRes(self, var ,aW, aE, aN, aS, SU, aP):
+    def calcRes(self, var ,aW, aE, aN, aS, SU, aP, B, flag):
         """Function to calculate residuals given a variable"""
 
-        i = np.size(var, 0)
-        j = np.size(var, 1)
-
-        Rvar = 0
-
-        for m in range(1,i-1):  # loop through rows
-            for n in range(1,j-1):  # loop through columns
-
-                    sumvar = aE[m][n]*var[m][n+1] + aW[m][n]*var[m][n-1] + aN[m][n]*var[m-1][n] + aS[m][n]*var[m+1][n] + SU[m][n] -aP[m][n]*var[m][n]
-                    Rvar = Rvar + abs(sumvar)
-
-        return (Rvar)
+        sumvar = 0.0 * var
+        if flag in ['omega']:
+            sumvar[2:-2, 2:-2] = abs((var[2:-2, 1:-3] * aW[2:-2, 2:-2] + var[2:-2, 3:-1] * aE[2:-2, 2:-2] + var[3:-1, 2:-2] * aS[2:-2, 2:-2] + \
+                                  var[1:-3, 2:-2] * aN[2:-2, 2:-2] + SU[2:-2, 2:-2]) - aP[2:-2, 2:-2]*var[2:-2, 2:-2])
+        elif flag in ['B', 'b']:
+            sumvar = B
+        else:
+            sumvar[1:-1, 1:-1] = abs((var[1:-1, 0:-2] * aW[1:-1, 1:-1] + var[1:-1, 2:] * aE[1:-1, 1:-1] + var[2:, 1:-1] * aS[1:-1,1:-1] + \
+                                              var[0:-2, 1:-1] * aN[1:-1, 1:-1] + SU[1:-1, 1:-1]) - aP[1:-1, 1:-1]*var[1:-1, 1:-1])
+        Rvar = sumvar.sum()
+        return Rvar
 
     def calcResomg(self, var ,aW, aE, aN, aS, SU, aP):
         """Function to calculate residuals given a variable"""
@@ -76,8 +75,6 @@ class calcResiduals(object):
 
         for m in range(1,i-1):  # loop through rows
             for n in range(1,j-1):  # loop through columns
-
-                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
                     sumvar = B[m][n]
                     Rvar = Rvar + abs(sumvar)
         return (Rvar)
