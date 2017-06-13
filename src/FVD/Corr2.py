@@ -65,26 +65,24 @@ class Corr2(object):
 
         ppW, ppE,ppN, ppS, uPfinal,vPfinal  = 0.0*matPP, 0.0*matPP, 0.0*matU, 0.0*matU, 0.0*matU, 0.0*matU
 
-        for m in range(i):  # loop through rows
-            for n in range(j):  # loop through columns
+        for m in range(1, i - 1):  # loop through rows
+            for n in range(1, j - 1):  # loop through columns
 
-                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
-
-                    ppW[m][n] = PP[m][n-1]
-                    ppE[m][n] = PP[m][n+1]
-                    ppS[m][n] = PP[m+1][n]
-                    ppN[m][n] = PP[m-1][n]
-                    uPfinal[m][n] = u[m][n] + (dy[m][n] * (ppW[m][n] - ppE[m][n]) / (2.0*aP[m][n]))
-                    vPfinal[m][n] = v[m][n] + (dx[m][n] * (ppS[m][n] - ppN[m][n]) / (2.0* aP[m][n]))
+                ppW[m][n] = PP[m][n-1]
+                ppE[m][n] = PP[m][n+1]
+                ppS[m][n] = PP[m+1][n]
+                ppN[m][n] = PP[m-1][n]
+                uPfinal[m][n] = u[m][n] + (dy[m][n] * (ppW[m][n] - ppE[m][n]) / (2.0*aP[m][n]))
+                vPfinal[m][n] = v[m][n] + (dx[m][n] * (ppS[m][n] - ppN[m][n]) / (2.0* aP[m][n]))
 
             # PAD BCS
         # Apply bcs U and V
-        for m in range(0, j):
-            for n in range(0, i):
-                if (m >= 0 and n == 0):  # A Boundary
+        for m in range(0, i):
+            for n in range(0, j):
+                if (n == 0):  # A Boundary
                     uPfinal[m][n] = uA  # pad bc velocities
                     vPfinal[m][n] = vA  # pad bc velocities
-                if (m >= 0 and n == j - 1):  # C Boundary
+                if (n == j - 1):  # C Boundary
                     uPfinal[m][n] = uC  # pad bc velocities
                     vPfinal[m][n] = vC  # pad bc velocities
                 if (m == i - 1 and n != j - 1 and n != 0):  # D Boundary

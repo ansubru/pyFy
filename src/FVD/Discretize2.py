@@ -336,9 +336,8 @@ class Discretize2(object):
         j = np.size(matU, 1)
 
 
-        for m in range(0, j):
-            for n in range(0, i):
-                if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+        for m in range(1, i - 1):  # loop through rows
+                for n in range(1, j - 1):  # loop through columns --> Internal nodes
                     # Diffusion conductance
                     DxE[m][n] = (mu + mut[m][n]) / delXE[m][n]
                     DxW[m][n] = (mu + mut[m][n]) / delXW[m][n]
@@ -413,10 +412,8 @@ class Discretize2(object):
 
         if flag in ['u', 'U', 'v', 'V']:
 
-            for m in range(i):  # loop through rows
-                for n in range(j):  # loop through columns
-
-                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+            for m in range(1, i - 1):  # loop through rows
+                    for n in range(1, j - 1):  # loop through columns
 
                         ##COEFFS RHIE-CHOW
 
@@ -431,44 +428,42 @@ class Discretize2(object):
 
                     # HACK FOR HAVING NON ZERO VALUES AT BC NODES
 
-                    if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
-                        aEp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+                        if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
+                            aEp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
 
-                    if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
-                        aWp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+                        if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
+                            aWp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
 
-                    if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
-                        aNp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+                        if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
+                            aNp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
 
-                    if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
-                        aSp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
+                        if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
+                            aSp[m][n] = Interp_obj.lin_interp(aPmod[m][n], 0)  # Neumann bc at all boundaries
 
             # !!!!!!!!!!!!!!!COEFFICIENTS FOR Pprime EQUATION# !!!!!!!!!!!!
 
-            for m in range(i):  # loop through rows
-                for n in range(j):  # loop through columns
+            for m in range(1, i - 1):  # loop through rows
+                    for n in range(1, j - 1):  # loop through columns
 
-                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
                         aWpp[m][n] = (rho * dy[m][n] ** 2) / aWp[m][n]
                         aEpp[m][n] = (rho * dy[m][n] ** 2) / aEp[m][n]
                         aSpp[m][n] = (rho * dx[m][n] ** 2) / aSp[m][n]
                         aNpp[m][n] = (rho * dx[m][n] ** 2) / aNp[m][n]
 
-                    if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
-                        aEpp[m][n] = 0.0
+                        if (m > 0 and m < i - 1 and n == j - 2):  # Boundary face (EAST):  # first grid nodes
+                            aEpp[m][n] = 0.0
 
-                    if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
-                        aWpp[m][n] = 0.0
+                        if (m > 0 and m < i - 1 and n == 1):  # Boundary face (WEST):  # first grid nodes
+                            aWpp[m][n] = 0.0
 
-                    if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
-                        aNpp[m][n] = 0.0
+                        if (m == 1 and n > 0 and n < j - 1):  # Boundary face (NORTH):  # first grid nodes
+                            aNpp[m][n] = 0.0
 
-                    if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
-                        aSpp[m][n] = 0.0
+                        if (m == i - 2 and n > 0 and n < j - 1):  # Boundary face (SOUTH):  # first grid nodes
+                            aSpp[m][n] = 0.0
 
-            for m in range(i):  # loop through rows
-                for n in range(j):  # loop through columns
-                    if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes
+            for m in range(1, i - 1):  # loop through rows
+                    for n in range(1, j - 1):
                         aPpp[m][n] = aWpp[m][n] + aEpp[m][n] + aSpp[m][n] + aNpp[m][n]
 
 

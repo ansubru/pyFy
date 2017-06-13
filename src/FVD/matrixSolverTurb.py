@@ -84,7 +84,8 @@ omegain = solFunc_obj.initializeOmega(omegainit)
 # COPY omegaw TO BOUNDARY
 omega = solFunc_obj.setPsetbcs(omegain)
 #Initialize turbulent viscosity
-mut, muts = 0.0*grid, 0.0*grid
+#mut, muts = 0.0*grid, 0.0*grid
+#mut, muts = solFunc_obj.calcMuts(k, omega)
 #Timing simulations
 start = time.clock()
 #Plot output display control
@@ -95,10 +96,11 @@ caseType = "Turbulent"
 
 ############################################################### Controls for iterations ###################################################################################################################
 
-iters = 100 #number of gauss seidel sweeps
+iters = 20 #number of gauss seidel sweeps
+iters2 = 2
 resInp = 1e-6 #residual for gauss seidel (internal residual for GS sweeps)
 residual = 1e-5 #residual for all equations (convergence criteria)
-interinp = 10000 #number of outer iterations
+interinp = 100 #number of outer iterations
 ################################################################################### SOLVER ##################################################################################################################
 
     #Step 1 : Solve for U,V using interpolated pressure using Discretize class obj
@@ -117,12 +119,12 @@ while (outerIters < interinp):
 
     # #Step 1a : Solve for U using gauss seidel method
     # # --> Returns U* (newU) which will be corrected using rhie-chow interpolation
-    #Ustar1 = gs_obj.gaussSeidel6u(U, aW, aE, aN, aS, aPmod,SUxmod, iters, "U")
+    Ustar1 = gs_obj.gaussSeidel6u(U, aW, aE, aN, aS, aPmod,SUxmod, iters2, "U")
     Ustar = gs_obj.gaussSeidel3u(U, aW, aE, aN, aS, aPmod, SUxmod, iters, "U")
 
     # #Step 1b : Solve for V using gauss seidel method
     # # --> Returns V* (newV) which will be corrected using rhie-chow interpolation
-    #Vstar = gs_obj.gaussSeidel6u(V, aW, aE, aN, aS, aPmod,SUymod, iters, "V")
+    Vstar1 = gs_obj.gaussSeidel6u(V, aW, aE, aN, aS, aPmod,SUymod, iters2, "V")
     Vstar = gs_obj.gaussSeidel3u(V, aW, aE, aN, aS, aPmod, SUymod, iters, "V")
 
     #Step 2 : RHIE-CHOW INTERPOLATION
@@ -146,8 +148,8 @@ while (outerIters < interinp):
     #Step 3b #Solve P' using co-eff for Pprime equation
 
     resInpPP = 1e-10
-    itersSpcl = 6000
-    #Pprime1 = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl, "P")
+    itersSpcl = 3000
+    Pprime1 = gs_obj.gaussSeidel6u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, iters2, "P")
     Pprime = gs_obj.gaussSeidel3u(Pset, aWpp, aEpp, aNpp, aSpp, aPpp, b, itersSpcl, "Pprime")
 
     #Step 4 : Set pressure based on value at cell (2,2)
@@ -175,7 +177,7 @@ while (outerIters < interinp):
 
     # #Step 8a : Solve for k using gauss seidel method
     # # --> Returns newk which will be used to solve for omega
-    #kNew1 = gs_obj.gaussSeidel6u(k, aWk, aEk, aNk, aSk, aPmodk,SUmodk, iters, "k")
+    kNew1 = gs_obj.gaussSeidel6u(k, aWk, aEk, aNk, aSk, aPmodk,SUmodk, iters2, "k")
     kNew = gs_obj.gaussSeidel3u(k, aWk, aEk, aNk, aSk, aPmodk, SUmodk, iters, "k")
 
     ## Step 9 : Solve omega equation
@@ -185,7 +187,7 @@ while (outerIters < interinp):
         = disc_obj2.FOU_discTurb2(uNew, vNew, kNew, omega, mdotwNew, mdoteNew, mdotnNew, mdotsNew, mutskNew, P, "omega")
 
     #omegaNew = gs_obj.gaussSeidel4u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg,SUmodomg, resInp, "omega")
-    #omegaNew1 = gs_obj.gaussSeidel6u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg, SUmodomg, iters, "omega")
+    omegaNew1 = gs_obj.gaussSeidel6u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg, SUmodomg, iters2, "omega")
     omegaNew = gs_obj.gaussSeidel3u(omega, aWomg, aEomg, aNomg, aSomg, aPmodomg, SUmodomg, iters, "omega")
 #
 #   #Step 10 : Calculate residual
@@ -194,7 +196,7 @@ while (outerIters < interinp):
     resK = res_obj.calcRes(k,  aWk, aEk, aNk, aSk, SUmodk, aPmodk, b, "K")
     resPP = res_obj.calcRes(Pset, aWpp, aEpp, aNpp, aSpp,  b, aPpp, b, "PP")
     resomg = res_obj.calcRes(omega, aWomg, aEomg, aNomg, aSomg, SUmodomg, aPmodomg, b, "omega")
-    resB = res_obj.calcResB(b)
+    resB = res_obj.calcRes(omega, aWomg, aEomg, aNomg, aSomg, SUmodomg, aPmodomg, b, "B")
 
     eps = max(resU, resV, resK, resomg, resB, resPP) # max residual for the run
 
@@ -224,4 +226,5 @@ while (outerIters < interinp):
 # # #Plots at simulation end
 print ("***!!***!!***!!***!!***!!***    HOUSTON!! WE HAVE CONVERGED :D ...     ***!!***!!***!!***!!***!!***")
 plt_obj.plotdataTurb(U, V, k, omega, ypt, mut, resplotU, resplotV, resplotk, resplotomg, resplotB, resplotPP, outerIters)
+
 

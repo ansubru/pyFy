@@ -436,3 +436,7 @@ for m in range(i):  # loop through rows
                              u[0:-2, 1:-1] * aN[1:-1, 1:-1] + SUx[1:-1, 1:-1]) / aP[1:-1, 1:-1]
             sumRes = sumRes + (uW * aW[m][n] + uE * aE[m][n] + uS * aS[m][n] + \
                                uN * aN[m][n] + SUx[m][n]) - u[m][n] * aP[m][n]
+
+
+x, y = plt_obj.genGridLam(U)
+plt_obj.plotdata2(U, V, y, resplotU, resplotV, resplotB, outerIters)

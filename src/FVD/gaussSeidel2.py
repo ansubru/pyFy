@@ -159,7 +159,7 @@ class gaussSiedel2(object):
 
         return u
 
-    def gaussSeidel6u(self, u, aW, aE, aN, aS, aP, SUx, resinp, flag):
+    def gaussSeidel6u(self, u, aW, aE, aN, aS, aP, SUx, iterinp, flag):
         """Solves gauss seidel for a fixed number of iterations."""
 
         iter = 0 # Mock up error parameter only to run the While
@@ -170,7 +170,7 @@ class gaussSiedel2(object):
         residual = 1
         resHist  = [diffs]
 
-        while residual > resinp:
+        while iterinp > iter:
             if flag in ['omega']:
                 for m in range(2, i - 2):  # loop through rows
                     for n in range(2, j - 2):  # loop through columns
@@ -184,9 +184,8 @@ class gaussSiedel2(object):
                                      uN * aN[m][n] + SUx[m][n]) / aP[m][n]
 
             else:
-                for m in range(i):  # loop through rows
-                    for n in range(j):  # loop through columns
-                        if (m != 0 and n != 0 and m != (i - 1) and n != (j - 1)):  # Internal nodes:
+                for m in range(1, i-1):  # loop through rows
+                    for n in range(1,j-1):  # loop through column
 
                             uN = u[m - 1][n]
                             uS = u[m + 1][n]
@@ -200,7 +199,7 @@ class gaussSiedel2(object):
                 break
 
             iter += 1
-        print "Solved G-S for %s with %i iterations and a final residual of %e"%(flag, iter, diffs)
+        print "Solved G-S for %s with %i iterations "%(flag, iter)
 
         return u
 
